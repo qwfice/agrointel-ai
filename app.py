@@ -22,6 +22,7 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 
+from src.chat.assistant import ask, build_context
 from src.explanations.narrative import build_comparison
 from src.scoring.model import DEFAULT_WEIGHTS, rank_strategies
 
@@ -121,6 +122,27 @@ for rank, comp in enumerate(comparisons, start=1):
         st.subheader("Risks / needs local review")
         for r in comp["risks"]:
             st.markdown(f"- {r}")
+
+st.sidebar.divider()
+st.sidebar.header("Ask the assistant")
+st.sidebar.caption("Answers are grounded only in the real data shown on this page — not a trained model, just an existing AI reading our real numbers.")
+
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = []
+
+for role, text in st.session_state.chat_history:
+    st.sidebar.chat_message(role).write(text)
+
+user_question = st.sidebar.chat_input("Ask about this location...")
+if user_question:
+    st.session_state.chat_history.append(("user", user_question))
+    try:
+        context = build_context("Kern County, CA (June 2023)", indicators, comparisons)
+        answer = ask(user_question, context)
+    except Exception as e:
+        answer = f"Couldn't reach the assistant: {e}"
+    st.session_state.chat_history.append(("assistant", answer))
+    st.rerun()
 
 st.header("Model limitations")
 st.caption("From the research plan's own stance on uncertainty (Section 12) — applies to every strategy above, not just the ones noted individually.")
