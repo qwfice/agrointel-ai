@@ -4,6 +4,22 @@ A running log of every plan proposed for this project, newest first. Each entry 
 
 ---
 
+## Chat assistant (Gemini API), grounded in real computed data
+
+**Status:** pending approval
+
+**Brief:** add the left-side chat panel from the product vision doc, backed by the Gemini API — not a trained/fine-tuned model, just an existing pre-trained model called via API (see earlier chat discussion on why training isn't the right approach here).
+
+1. `src/chat/assistant.py` — builds a prompt from the real computed data for the current location (indicators, scores, evidence/gaps/risks from `src/indicators`, `src/scoring`, `src/explanations`) plus the user's question, calls the Gemini API, and returns the answer. System prompt instructs it to answer only from the provided real data and say so plainly when something isn't covered by it, rather than inventing facts - consistent with the project's honesty stance (GOALS.md goal 7).
+2. A Gemini API key is needed - the user gets this themselves from Google AI Studio (aistudio.google.com/apikey) and sets it as an environment variable; I won't handle the raw key in chat.
+3. Add a chat panel to `app.py` (sidebar, matching the doc's "small vertical chat on the left").
+4. Verify in Chrome: ask it a real question about Kern County's actual data (e.g. "why did Soil-Conservation score highest?") and confirm the answer is grounded in the real numbers, not invented.
+5. Commit, push, add and check off a new GOALS.md item for this.
+
+**Scope note:** building this into the current Streamlit app first (not the eventual Vercel/Next.js frontend, which is still an open architecture question from the product-vision plan) - the prompt-building and API-call logic is reusable regardless of what frontend eventually calls it.
+
+---
+
 ## Product vision — from the team's "Nasa Space Apps" Google Doc (cleaned up)
 
 **Status:** pending approval — open questions below need answers before this becomes buildable steps
