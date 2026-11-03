@@ -121,3 +121,16 @@ for rank, comp in enumerate(comparisons, start=1):
         st.subheader("Risks / needs local review")
         for r in comp["risks"]:
             st.markdown(f"- {r}")
+
+st.header("Model limitations")
+st.caption("From the research plan's own stance on uncertainty (Section 12) — applies to every strategy above, not just the ones noted individually.")
+for limitation in [
+    "Satellite soil-moisture observations (SMAP) have much coarser resolution than many individual vegetable fields — a single reading represents a ~9km area, not this specific farm.",
+    "NASA POWER meteorological data is modeled from satellite/reanalysis sources, not a direct measurement taken at this farm.",
+    "Satellite observations cannot directly measure soil nitrogen, phosphorus, or organic matter content — soil-health scores are agronomic assumptions, not lab measurements.",
+    "Crop rotation effects (soil health, erosion) typically take multiple growing seasons to become measurable — a single season's data is a starting signal, not proof a strategy worked.",
+    "Economic suitability scores need real local market and price data to be reliable, which is not yet integrated.",
+    "Pest and disease interruption scores need local pest/disease records to be reliable, which is not yet integrated.",
+]:
+    st.markdown(f"- {limitation}")
+st.warning("AGROINTEL AI provides decision support, not guaranteed crop outcomes. A local agronomist or the farmer's own field knowledge should validate every recommendation above.")
