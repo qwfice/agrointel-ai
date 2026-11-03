@@ -86,11 +86,18 @@ def evidence_for(strategy: str, criteria_scores: dict[str, float], indicators: d
     )
 
     wetness = indicators["soil_moisture_relative_wetness_mean"]
-    evidence.append(
-        f"For reference, real SMAP soil moisture during the evaluation window averaged a relative "
-        f"wetness of {wetness:.2f} (0=driest SMAP can measure, 1=wettest) — not yet factored into "
-        f"water-use scoring, which remains a static assumption (see information gaps)."
-    )
+    if wetness is None:
+        evidence.append(
+            "Real SMAP soil moisture could not be retrieved for this location/date (a real "
+            "coverage gap, not an error) — not factored into water-use scoring, which remains "
+            "a static assumption regardless (see information gaps)."
+        )
+    else:
+        evidence.append(
+            f"For reference, real SMAP soil moisture at this location was a relative wetness of "
+            f"{wetness:.2f} (0=driest SMAP can measure, 1=wettest) — not yet factored into "
+            f"water-use scoring, which remains a static assumption (see information gaps)."
+        )
 
     return evidence
 

@@ -1,15 +1,18 @@
 """AGROINTEL AI — minimal Streamlit interface, with adjustable farmer
-priority weights (goals 5 and 6).
+priority weights (goals 5 and 6) and a live, any-location data pull.
 
-Shows the real computed indicators, the weighted rotation scores, and the
-full evidence/benefits/gaps/risks comparison for Kern County, CA, reusing
-the exact same code as scripts/compute_indicators.py, run_scoring.py, and
-generate_comparison.py — no logic is duplicated here. The sidebar sliders
+Shows real computed indicators, the weighted rotation scores, and the full
+evidence/benefits/gaps/risks comparison for whatever location you pick —
+reusing the exact same code as scripts/compute_indicators.py, run_scoring.py,
+and generate_comparison.py, no logic is duplicated here. The sidebar sliders
 let a farmer re-weight the six criteria; the app re-runs the real scoring
 model (src/scoring/model.py) with those weights, it does not fake the
 update.
 
-Single location for now (a location picker is a future step).
+Location indicators are live-fetched from real NASA POWER (fast) and a
+single recent day of SMAP (slower, ~30-60s) via src/indicators/live.py —
+see that module's docstring for why SMAP is one day, not a 30-day average,
+for arbitrary locations.
 
 Run with:
     streamlit run app.py
@@ -17,16 +20,13 @@ Run with:
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import pandas as pd
 import streamlit as st
 
 from src.chat.assistant import ask, build_context
 from src.explanations.narrative import build_comparison
+from src.indicators.live import fetch_and_compute_indicators
 from src.scoring.model import DEFAULT_WEIGHTS, rank_strategies
-
-OUT_DIR = Path(__file__).resolve().parent / "outputs"
 
 st.set_page_config(page_title="AGROINTEL AI", layout="wide")
 
@@ -38,16 +38,53 @@ st.info(
     "strategy's 'Information gaps' below before acting on this."
 )
 
-indicators_path = OUT_DIR / "kern_county_indicators.csv"
-if not indicators_path.exists():
-    st.error(
-        "No indicators found. Run `python scripts/compute_indicators.py` first "
-        "(after `explore_power_data.py` and `explore_smap_gpm_data.py`)."
-    )
+PRESET_LOCATIONS = {
+    "Kern County, CA, USA": (35.3733, -119.0187),
+    "Punjab, India": (30.9010, 75.8573),
+    "Cameron Highlands, Malaysia": (4.4696, 101.3818),
+    "Custom coordinates": None,
+}
+
+st.header("Pick a location")
+preset = st.selectbox("Location", options=list(PRESET_LOCATIONS))
+if preset == "Custom coordinates":
+    coord_cols = st.columns(2)
+    lat = coord_cols[0].number_input("Latitude", min_value=-90.0, max_value=90.0, value=35.3733, format="%.4f")
+    lon = coord_cols[1].number_input("Longitude", min_value=-180.0, max_value=180.0, value=-119.0187, format="%.4f")
+    location_label = f"Custom location ({lat:.4f}, {lon:.4f})"
+else:
+    lat, lon = PRESET_LOCATIONS[preset]
+    location_label = preset
+
+load_clicked = st.button("Load real NASA data for this location")
+
+
+@st.cache_data(show_spinner=False, ttl=3600)
+def _cached_fetch(lat: float, lon: float) -> dict:
+    return fetch_and_compute_indicators(lat, lon)
+
+
+# Only fetch on an explicit click, or on first load (nothing cached yet).
+# Changing the preset/coordinate inputs alone does NOT trigger a re-fetch -
+# that would re-run the slow SMAP pull on every widget interaction.
+should_fetch = load_clicked or "current_indicators" not in st.session_state
+if should_fetch:
+    with st.spinner(f"Fetching real NASA POWER and SMAP data for {location_label}... (SMAP can take ~30-60s)"):
+        try:
+            st.session_state.current_indicators = _cached_fetch(lat, lon)
+            st.session_state.current_location = (lat, lon)
+            st.session_state.current_location_label = location_label
+            st.session_state.chat_history = []  # reset chat when location changes
+        except Exception as e:
+            st.error(f"Couldn't fetch real data for this location: {e}")
+            st.stop()
+
+if "current_indicators" not in st.session_state:
+    st.info("Pick a location above and click \"Load real NASA data\" to begin.")
     st.stop()
 
-indicators_df = pd.read_csv(indicators_path)
-indicators = dict(zip(indicators_df["indicator"], indicators_df["value"]))
+indicators = st.session_state.current_indicators
+location_label = st.session_state.current_location_label
 
 st.sidebar.header("Your priorities")
 st.sidebar.caption("Drag to say what matters more to you. Scores and rankings below update live.")
@@ -77,14 +114,19 @@ if sum(weights.values()) == 0:
     st.sidebar.warning("All priorities are at 0 — using equal weighting instead.")
     weights = {c: 1.0 for c in CRITERION_LABELS}
 
-st.header("Kern County, CA — June 2023 conditions")
+st.header(f"{location_label} — current conditions")
 cols = st.columns(5)
 cols[0].metric("Temp anomaly (mean)", f"{indicators['temp_anomaly_mean_c']:+.2f} C")
 cols[1].metric("Temp anomaly (max)", f"{indicators['temp_anomaly_max_c']:+.2f} C")
 cols[2].metric("Longest dry spell", f"{indicators['longest_dry_spell_days']:.0f} days")
 cols[3].metric("Extreme rainfall days", f"{indicators['extreme_rainfall_days']:.0f}")
-cols[4].metric("Soil moisture wetness", f"{indicators['soil_moisture_relative_wetness_mean']:.2f}")
-st.caption("Temp/rainfall anomalies vs. 5-year NASA POWER climatology. Soil moisture from real SMAP data (0=driest, 1=wettest SMAP can measure).")
+wetness = indicators["soil_moisture_relative_wetness_mean"]
+cols[4].metric("Soil moisture wetness", f"{wetness:.2f}" if wetness is not None else "N/A")
+st.caption(
+    "Temp/rainfall anomalies vs. 5-year NASA POWER climatology, last 30 days. Soil moisture: most "
+    "recent available real SMAP reading (0=driest, 1=wettest SMAP can measure) — a single-day "
+    "snapshot for this location, N/A if SMAP had no coverage in the lookback window."
+)
 
 st.header("Rotation strategy comparison")
 ranked = rank_strategies(indicators, weights)
@@ -137,7 +179,7 @@ user_question = st.sidebar.chat_input("Ask about this location...")
 if user_question:
     st.session_state.chat_history.append(("user", user_question))
     try:
-        context = build_context("Kern County, CA (June 2023)", indicators, comparisons)
+        context = build_context(location_label, indicators, comparisons)
         answer = ask(user_question, context)
     except Exception as e:
         answer = f"Couldn't reach the assistant: {e}"
