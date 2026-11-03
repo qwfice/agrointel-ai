@@ -4,6 +4,20 @@ A running log of every plan proposed for this project, newest first. Each entry 
 
 ---
 
+## Deploy the API to Render
+
+**Status:** approved, in progress
+
+**Brief:** get `api/main.py` running on a public URL via Render, so FieldCycle (or anything else) can actually reach it. Steps:
+
+1. **Fix a real gap first:** `src/indicators/live.py`'s Earthdata login currently only works via `~/.netrc` (a local file on this machine). Render has no such file - add a fallback to `earthaccess.login(strategy="environment")`, which reads `EARTHDATA_USERNAME`/`EARTHDATA_PASSWORD` environment variables instead. Try environment first, fall back to netrc for local dev.
+2. Add deployment config (`render.yaml` or documented manual settings): Python web service, `pip install -r requirements.txt` build command, `uvicorn api.main:app --host 0.0.0.0 --port $PORT` start command.
+3. **Credentials are the user's to enter, not mine:** the user creates a Render account themselves, connects this GitHub repo, and sets `GEMINI_API_KEY`, `EARTHDATA_USERNAME`, `EARTHDATA_PASSWORD` as environment variables directly in Render's dashboard - I won't see or handle the values.
+4. Once deployed, verify the live public URL actually responds correctly (`/`, `/indicators` without soil moisture first since SMAP may still be rate-limited, then `/score`, `/chat`).
+5. Commit, push, update GOALS.md. Wiring up Bubble's API Connector to this URL is the next step after this one, not part of this step.
+
+---
+
 ## Build a public API so FieldCycle (Bubble) can call our AI
 
 **Status:** done (local only — deployment is a separate follow-up step)
