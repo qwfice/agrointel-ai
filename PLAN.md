@@ -4,6 +4,23 @@ A running log of every plan proposed for this project, newest first. Each entry 
 
 ---
 
+## SI grid: 2 more real models + smooth heatmap visual (instead of hard grid boxes)
+
+**Status:** done — verified live in Chrome. All 5 models (Erosion Risk, Water Stress, Temperature Anomaly, Climate Resilience, Overall Suitability) confirmed working with correct legends (red-high for risk models, green-high for Climate Resilience/Overall Suitability) and zero new network requests when switching. Heatmap renders as smooth continuous coverage (Leaflet.heat, radius/blur sized from on-screen point spacing, re-rendered on zoom) instead of hard-edged boxes.
+
+**Context:** User shared a landslide-susceptibility-mapping reference image (continuous painted terrain, not discrete boxes) and asked why there are only 3 map models when the data could support more. Checked `src/scoring/model.py`: of the 6 `criteria_scores` from `/score`, only `climate_resilience` and `erosion_reduction` are computed from real NASA data — `soil_health_potential`, `water_use_suitability`, `pest_disease_interruption`, `economic_suitability` use documented baseline assumptions (per existing GOALS.md honesty notes), so those won't be added as "real" map models. User also asked for long-term soil moisture, heat waves, and water-storage decline. Decided with the user:
+- Soil moisture: **skip for now** — a single SMAP call already timed out past 60s in earlier testing; fetching it per grid point would make searches unusably slow.
+- Heat waves (true consecutive-extreme-heat-day detection) and water-storage decline (GRACE/GRACE-FO, an entirely uningested NASA dataset) are **real backend work**, not a website tweak — deferred to a separate future task, logged in `GOALS.md` rather than built now.
+
+**Brief:**
+1. Add 2 more real map models to the dropdown, reusing data already fetched per grid cell (no new API calls): **Temperature Anomaly** (`temp_anomaly_mean_c`) and **Climate Resilience** (`criteria_scores.climate_resilience` from `/score`, captured alongside the existing `overall_score` pull).
+2. Replace the hard-edged grid rectangles with a smooth interpolated heatmap (Leaflet.heat, loaded from CDN) built from the same real sampled grid points, colored with a gradient matching the existing 5-class legend per model (red=high for risk models, green=high for suitability/resilience). This is visual interpolation between real sampled points, not a true per-pixel satellite-derived raster like the reference image's landslide study — the legend/copy will stay honest about that.
+3. Tune heatmap radius/blur so the sampled points blend into continuous coverage across the current grid's bounding box, recalculated on zoom change.
+4. Demo in Chrome: Iowa farm and a new search, switching through all 5 models, confirming the heatmap looks continuous and the legend/values stay accurate.
+5. Commit and push to `A.I-integration` (updates PR #1). Add a note to `GOALS.md` under External/future goals for the deferred heat-wave and GRACE water-storage backend work.
+
+---
+
 ## Real, per-location Suitability Index overlay on the website map (expanded: grid heatmap + model selector)
 
 **Status:** done — verified live in Chrome with the default Iowa farm (uniform real data at that scale, correctly so — small area, similar climate) and a Punjab, India search (real boundingBox-derived grid with real variation). Confirmed switching models re-renders instantly with zero new network requests (reuses already-fetched data). Reduced grid size to 16 points (4×4, capped) to keep per-search API calls reasonable; increased rectangle fill opacity + white borders after the first pass rendered but was visually invisible against the satellite basemap. Dropped the stale `toggleOverlay`/checkbox-based chat commands (referenced removed DOM elements) in favor of `setSuitabilityModel`.
