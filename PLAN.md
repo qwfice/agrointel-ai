@@ -4,6 +4,19 @@ A running log of every plan proposed for this project, newest first. Each entry 
 
 ---
 
+## Fix black "teeth" artifact on the map at low zoom
+
+**Status:** done — verified live in Chrome. `minZoom: 4` still showed the gaps at that exact zoom, bumped to `minZoom: 5`; confirmed clean full-world Esri view below zoom 5 and correct NASA imagery (clouds, heatmap) reappearing at zoom 5+, both zooming out and back in.
+
+**Context:** User reported jagged black triangular gaps on the map when zoomed far out. Diagnosed: `createGibsLayer` (`script.js:33`) loads NASA's single-day MODIS/VIIRS "Corrected Reflectance" imagery, which has real satellite-orbit swath gaps — visible whenever the view is wide enough (country-scale, which the new place-search/SI grid feature naturally encourages). Pre-existing in the original site code, not introduced by recent changes, but now more likely to be hit.
+
+**Brief:**
+1. Add `minZoom` to the GIBS tile layer options so it stops rendering below a zoom level where swath gaps become visually prominent, leaving the always-complete Esri satellite basemap visible underneath at wide zoom (no blank/broken area — a real fallback, not a gap).
+2. Demo in Chrome: zoom out past the threshold and confirm the basemap stays clean (no teeth), then zoom back in and confirm the NASA layer reappears normally.
+3. Commit and push to `A.I-integration` (updates PR #1).
+
+---
+
 ## SI grid: 2 more real models + smooth heatmap visual (instead of hard grid boxes)
 
 **Status:** done — verified live in Chrome. All 5 models (Erosion Risk, Water Stress, Temperature Anomaly, Climate Resilience, Overall Suitability) confirmed working with correct legends (red-high for risk models, green-high for Climate Resilience/Overall Suitability) and zero new network requests when switching. Heatmap renders as smooth continuous coverage (Leaflet.heat, radius/blur sized from on-screen point spacing, re-rendered on zoom) instead of hard-edged boxes.
