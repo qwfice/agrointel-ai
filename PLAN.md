@@ -4,6 +4,26 @@ A running log of every plan proposed for this project, newest first. Each entry 
 
 ---
 
+## Wire the live AGROINTEL AI API into agrointel-website
+
+**Status:** done — chat section built, wired to the live API, tested live in Chrome with a real grounded answer for the Iowa farm location (fixed a pre-existing `markers`-before-declaration bug along the way that was breaking all page scripts). Committed and pushed to branch `A.I-integration` on https://github.com/aizenthegoat123/agrointel-website (branch named with a hyphen, not a space — git doesn't allow spaces in branch names). Push initially failed with a 403 (qwfice lacked write access); resolved once the teammate granted collaborator write access.
+
+**Context:** `agrointel-website` (github.com/aizenthegoat123/agrointel-website, teammate added us as collaborator) is the team's official site repo. The user sent the real, current site code (a `crop-rotation-tool` folder: `index.html`, `script.js`, `styles.css`) which is a full "Crop Rotation Explorer" static site for a sample Iowa farm (42.0308°N, -93.6319°W) — hero section, farmer-priorities quiz, Leaflet/NASA-GIBS interactive map, NASA POWER climate charts (fetched client-side directly from power.larc.nasa.gov), a 3-strategy comparison with tabs, and a comparison table. **It has no chat/AI element anywhere** — the repo's previous bare chat-stub scaffold is superseded by this. User's explicit instruction stands: get the AI functionally working first, defer visual polish to later. User also asked for this work to go on a new branch, "A.I integration", in `agrointel-website`, not `main`.
+
+**Brief:**
+1. Replace the local working copy of `agrointel-website` with the user's supplied `index.html`/`script.js`/`styles.css` (from `~/Downloads/crop-rotation-tool`), on a new branch `A.I integration` created off `main`.
+2. Add a minimal AI assistant chat section to `index.html`, placed after the hero/nav (own `<section id="ai-assistant">`), styled plainly with the site's existing dark/green CSS variables/theme already in `styles.css` — a header, a scrollable message list, a text input + send button. No redesign beyond matching existing colors/fonts.
+3. Implement the chat logic in `script.js`:
+   - On send: show the user's message, then call the deployed API at `https://agrointel-ai-api.vercel.app`: `POST /indicators` using the site's own existing `FARM_LAT`/`FARM_LON` constants (42.0308, -93.6319 — the same Iowa location the rest of the page already uses, so the AI's answers are grounded in the same place the user is looking at), then `POST /chat` with those real indicators, a location label ("Central Iowa, USA (Ames area)"), and the user's question. Render the real Gemini-grounded answer as a bot message.
+   - Show a plain "Thinking…" bot message while waiting, replaced by the real answer.
+   - On failure (network/API error), show "Something went wrong talking to AGROINTEL AI" rather than crashing silently.
+4. No backend changes needed — `api/main.py` already has `CORSMiddleware(allow_origins=["*"])`.
+5. Demo in the user's real Chrome (via the Chrome extension): open the page, ask a real question, confirm a real grounded answer referencing the Iowa indicators comes back, and confirm the rest of the page (map, charts, priorities, tabs) still works unmodified.
+6. Commit and push to the `A.I integration` branch on `agrointel-website` (not `main`, not `agrointel-ai`). Update this repo's `GOALS.md` to note the website now has a working chat integration, linking the branch.
+7. Explicitly out of scope for this step: the image panel concept from the old scaffold (dropped — this new site doesn't have one), a location picker, and any visual redesign beyond what's needed to fit the chat section into the existing page — those are "later."
+
+---
+
 ## Deploy the API to Render
 
 **Status:** abandoned — Render's one-click Blueprint deploy required payment card info even on the free tier. User declined ("I don't want to pay"). Superseded by the Vercel plan below, which also matches the team's originally-stated deployment target.
