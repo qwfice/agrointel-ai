@@ -6,7 +6,7 @@ A running log of every plan proposed for this project, newest first. Each entry 
 
 ## Chat assistant (Gemini API), grounded in real computed data
 
-**Status:** pending approval
+**Status:** done — grounded (real data) and ungrounded (off-scope) questions both tested and behaved correctly
 
 **Brief:** add the left-side chat panel from the product vision doc, backed by the Gemini API — not a trained/fine-tuned model, just an existing pre-trained model called via API (see earlier chat discussion on why training isn't the right approach here).
 

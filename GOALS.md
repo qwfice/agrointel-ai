@@ -32,6 +32,15 @@ A new, bigger feature: a world map where a farmer types a country and sees a liv
 - [ ] **Link the map to the detailed comparison view.** Clicking/selecting a spot on the map hands off to our existing Streamlit scoring+explanation app for that location — nothing already built gets thrown away.
 - [ ] **Expand beyond one country.** Once the pattern works for one country, confirm it holds for others before calling this "a world map."
 
+## Product vision goals (from team Google Doc)
+
+See [PLAN.md](PLAN.md) for the cleaned-up source and open architecture questions (Vercel vs. our current stack, relationship to the FieldCycle Bubble app).
+
+- [x] **Chat assistant.** A left-side chat panel, backed by an existing pre-trained model (not a trained-from-scratch SLM), grounded only in the real computed data for the current location. *Done: `src/chat/assistant.py` (Gemini API) + sidebar panel in `app.py`. Verified in Chrome: a grounded question correctly cites real scores/numbers; an out-of-scope question (market prices) correctly declines to guess and suggests a local agronomist instead.*
+- [ ] **Cookie consent choice.** Accept/decline, per the doc.
+- [ ] **Farmer/expert report submission + admin review.** Entirely new scope — no design yet.
+- [ ] **Direct location search** (type a place name, not just click the map) — partially covered by the World Map country picker, not yet for arbitrary sub-country locations.
+
 ## Workflow
 
 - Every change to this project gets a written plan first (what's changing, why, files touched) for review and approval before implementation — logged in [PLAN.md](PLAN.md) so there's a record of what was proposed, independent of chat history.
