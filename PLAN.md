@@ -4,6 +4,21 @@ A running log of every plan proposed for this project, newest first. Each entry 
 
 ---
 
+## Make the main app location-agnostic (any latitude/longitude, not just Kern County)
+
+**Status:** approved, in progress
+
+**Brief:** our NASA data clients (`src/data/nasa_power.py`, `nasa_smap.py`, `nasa_gpm.py`) are already global - they take any lat/lon. The gap is that `app.py` only ever loads Kern County's pre-saved CSV, so the scores and chat assistant only ever "know" that one place. This fixes that:
+
+1. Add a location input (latitude/longitude) to `app.py`, replacing the hardcoded Kern County CSV load.
+2. On submit, live-fetch real NASA POWER data for that point (fast, proven - seconds for 5 years at Kern County) and compute real indicators from it (temp/rainfall anomalies, dry spell, extreme rainfall) - these alone drive most of the scoring already.
+3. For soil moisture: fetch one recent day of SMAP for that point (not a 30-day average) - slower (~30-60s, spinner shown), but a real current-conditions snapshot for that specific place instead of reusing Kern County's number.
+4. Run the real scoring model + chat assistant on this live-pulled data, so both are genuinely location-specific.
+5. Verify with two different real locations (not Kern County again) to prove it's not another hardcoded swap.
+6. Commit, push, update GOALS.md/PLAN.md.
+
+---
+
 ## Chat assistant (Gemini API), grounded in real computed data
 
 **Status:** done — grounded (real data) and ungrounded (off-scope) questions both tested and behaved correctly
