@@ -4,6 +4,21 @@ A running log of every plan proposed for this project, newest first. Each entry 
 
 ---
 
+## Heatmap: smoother blending, full-viewport coverage, enable/disable toggle
+
+**Status:** done — verified live in Chrome (Iowa default view and a Kenya search), toggle confirmed on/off/back-on with cache reuse. Hit and fixed a real bug along the way: `map.getBounds()` was read before Leaflet had the container's final size (classic stale-size issue), so the heatmap covered only a fraction of the visible map — fixed with `map.invalidateSize()` right before reading bounds.
+
+**Context:** The SI heatmap currently samples a small box around the searched point/place's boundingbox, which can leave most of the visible map uncolored, and the blend radius is tight enough to show some blob-like separation between sample points. User wants it smoother and covering the whole visible map, plus a way to turn it off.
+
+**Brief:**
+1. Switch grid sampling from "a box around the search result" to **the current map viewport** (`map.getBounds()`, read right after the view is set) — so the sampled area always matches what's actually on screen, literally covering "the whole map" without needing to track pan/zoom continuously or refetch outside of a search.
+2. Increase grid density slightly (25 points, 5×5, still capped) and increase the heat layer's radius/blur multipliers so points blend into fully continuous coverage with no visible gaps or blob edges.
+3. Add a **"Show Suitability Heatmap" checkbox** next to the Map Model dropdown, defaulting on. Unchecking removes the heat/marker layer from the map (cheap, no refetch); re-checking restores it from cache, or fetches if there's nothing cached yet for the current view.
+4. Demo in Chrome: confirm the heat now covers the full visible map area after a search, confirm it reads as smooth/continuous, and confirm the toggle cleanly shows/hides it.
+5. Commit and push to `A.I-integration` (updates PR #1).
+
+---
+
 ## Fix black "teeth" artifact on the map at low zoom
 
 **Status:** done — verified live in Chrome. `minZoom: 4` still showed the gaps at that exact zoom, bumped to `minZoom: 5`; confirmed clean full-world Esri view below zoom 5 and correct NASA imagery (clouds, heatmap) reappearing at zoom 5+, both zooming out and back in.
