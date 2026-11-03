@@ -14,5 +14,6 @@ Check a box off only once the corresponding goal is actually working and verifie
 
 ## Workflow
 
-- Every change to this project gets a written plan first (what's changing, why, files touched) for review and approval before implementation.
-- Approved work gets committed and pushed to [github.com/qwfice/agrointel-ai](https://github.com/qwfice/agrointel-ai) via git CLI.
+- Every change to this project gets a written plan first (what's changing, why, files touched) for review and approval before implementation — logged in [PLAN.md](PLAN.md) so there's a record of what was proposed, independent of chat history.
+- Approved work gets committed and pushed to [github.com/qwfice/agrointel-ai](https://github.com/qwfice/agrointel-ai) via git CLI, and the corresponding PLAN.md entry gets marked done.
+- UI/display work and anything AI-model-related is demoed in the user's own Chrome browser (via the Chrome extension), not just the built-in browser pane.

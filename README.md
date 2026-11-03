@@ -8,4 +8,4 @@ Project origin: [`AGROINTEL AI — Research Plan`](docs/AGROINTEL_AI_Research_Pl
 
 ## Status
 
-Early build. See [GOALS.md](GOALS.md) for the gaps identified between the research plan and an actual working tool, and the roadmap to close them.
+6 of 7 goals done. See [GOALS.md](GOALS.md) for the gaps identified between the research plan and an actual working tool, and [PLAN.md](PLAN.md) for the running log of what's been proposed and built at each step.
