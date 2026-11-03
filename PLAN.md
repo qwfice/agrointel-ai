@@ -6,11 +6,11 @@ A running log of every plan proposed for this project, newest first. Each entry 
 
 ## World map (GEE) — Prove the suitability-layer concept for one country (revised)
 
-**Status:** approved, in progress
+**Status:** done
 
 **Revision:** changed from India to Malaysia (ties to research plan Location 3, Cameron Highlands), and changed from a static map image to a real interactive map (pan/zoom) right away, per user request.
 
-**Brief:** build `src/geo/suitability.py` — pulls real Earth Engine data for Malaysia's boundary: precipitation (GPM), terrain slope (from SRTM elevation), and soil moisture (SMAP), combined into a simple 0-100 suitability score per pixel, classified into Low/Medium/High bands matching the reference app's legend style. Render this as a real interactive map (using `geemap`, embedded in Streamlit) - pan, zoom, and see the suitability layer over Malaysia, not a static picture. Verified by actually interacting with it in Chrome. Does not yet include country search or linking to the Streamlit detail view by clicking a spot - just proves the computation and interactive rendering both work for a real country.
+**Brief:** built `src/geo/suitability.py` — pulls real Earth Engine data for Malaysia's boundary: precipitation (GPM), terrain slope (from SRTM elevation), and soil moisture (SMAP), combined into a simple 0-100 suitability score per pixel. Rendered as a real interactive map (`pages/1_World_Map.py`, standard Earth Engine + folium pattern — `geemap`'s wrapper turned out to have a broken dependency, so built it directly instead) embedded in Streamlit. Verified interactively in Chrome: real pan/zoom, suitability layer precisely boundaried to Malaysia's actual territory, correctly excluding Brunei. Does not yet include country search or linking to the Streamlit detail view by clicking a spot - that's next.
 
 ---
 
