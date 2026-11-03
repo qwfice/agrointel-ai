@@ -26,7 +26,7 @@ Beyond the 7 core goals above, these are gaps between "a working tool for one lo
 
 A new, bigger feature: a world map where a farmer types a country and sees a live-highlighted suitability layer, using Google Earth Engine (GEE) for the map/compute layer and our existing Streamlit app as the detailed per-location view once a spot is picked. See [PLAN.md](PLAN.md) for the reasoning behind this architecture.
 
-- [ ] **Set up Google Earth Engine access.** Free account/project registered, Earth Engine API enabled, verified with a minimal working script.
+- [x] **Set up Google Earth Engine access.** Free account/project registered, Earth Engine API enabled, verified with a minimal working script. *Done: project `nasa-space-apps-513601`, registered for non-commercial use, verified with `ee.Initialize()` + a real `USGS/SRTMGL1_003` elevation image query.*
 - [ ] **Prove the suitability-layer concept for one country.** A GEE script/app that paints a real (not fake) crop-suitability layer onto the map for a single country, using real GEE-hosted datasets.
 - [ ] **Build the world map interface.** Country search, GEE App (or embedded GEE layer) showing the suitability highlighting, matching the reference site's interaction pattern.
 - [ ] **Link the map to the detailed comparison view.** Clicking/selecting a spot on the map hands off to our existing Streamlit scoring+explanation app for that location — nothing already built gets thrown away.
