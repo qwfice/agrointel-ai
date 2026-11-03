@@ -47,7 +47,7 @@ The team's FieldCycle app (Bubble.io) already has NASA POWER, OpenStreetMap geoc
 
 - [x] **Build a public-shaped API locally.** `api/main.py` (FastAPI) wrapping our existing logic, no duplication — `/indicators`, `/score`, `/chat`. *Done: all three endpoints verified working via real HTTP requests with real data (not deployed publicly yet, runs on localhost only).*
 - [x] **Deploy the API publicly.** *Done: live at https://agrointel-ai-api.vercel.app on Vercel, auto-deploying from `main`. All 4 endpoints verified against the live URL with real data: `/` (health check), `/indicators` (real Kern County NASA POWER data), `/score` (real ranked strategy comparisons), `/chat` (grounded Gemini answer citing the real scores). Fixed two real bugs found during deployment: a trimmed `api/requirements.txt` (root requirements.txt pulled in Streamlit/Earth Engine/matplotlib and blew the 500MB Lambda size limit) and a missing `h5py` pin (silently relied on it already being installed locally).*
-- [ ] **Wire up Bubble's API Connector.** Add a new API entry in FieldCycle pointing at the deployed URL, same pattern as the existing 3 integrations.
+- [x] **Wire up Bubble's API Connector.** *Done: a new "AGROINTEL AI" API entry in FieldCycle's API Connector, matching the existing NASA POWER / Photon / SRTM pattern — three POST calls (Indicators, Score, Chat) pointing at https://agrointel-ai-api.vercel.app, each initialized with a real test request against the live deployment and returning real data (confirmed: real Kern County indicators, real ranked strategy scores, and a real grounded Gemini answer).*
 - [ ] **Add a chat UI element to FieldCycle** that calls it.
 
 ## Workflow
