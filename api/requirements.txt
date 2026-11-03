@@ -1,6 +1,7 @@
 requests>=2.31
 pandas>=2.0
 earthaccess
+h5py>=3.10
 google-genai>=0.3
 python-dotenv>=1.0
 fastapi>=0.110
