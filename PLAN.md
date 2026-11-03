@@ -6,7 +6,7 @@ A running log of every plan proposed for this project, newest first. Each entry 
 
 ## World map (GEE) — Prove the suitability-layer concept for one country (revised)
 
-**Status:** pending approval
+**Status:** approved, in progress
 
 **Revision:** changed from India to Malaysia (ties to research plan Location 3, Cameron Highlands), and changed from a static map image to a real interactive map (pan/zoom) right away, per user request.
 
