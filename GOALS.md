@@ -22,6 +22,16 @@ Beyond the 7 core goals above, these are gaps between "a working tool for one lo
 - [ ] **Integrate real supporting agricultural data.** Water-use, pest/disease, and economic scores are still documented assumptions, not real FAO crop-water data, local pest records, or market prices.
 - [ ] **Prepare submission materials.** A project pitch/demo summary, screenshots or a short video — a README alone isn't a hackathon submission.
 
+## World map goals (Google Earth Engine)
+
+A new, bigger feature: a world map where a farmer types a country and sees a live-highlighted suitability layer, using Google Earth Engine (GEE) for the map/compute layer and our existing Streamlit app as the detailed per-location view once a spot is picked. See [PLAN.md](PLAN.md) for the reasoning behind this architecture.
+
+- [ ] **Set up Google Earth Engine access.** Free account/project registered, Earth Engine API enabled, verified with a minimal working script.
+- [ ] **Prove the suitability-layer concept for one country.** A GEE script/app that paints a real (not fake) crop-suitability layer onto the map for a single country, using real GEE-hosted datasets.
+- [ ] **Build the world map interface.** Country search, GEE App (or embedded GEE layer) showing the suitability highlighting, matching the reference site's interaction pattern.
+- [ ] **Link the map to the detailed comparison view.** Clicking/selecting a spot on the map hands off to our existing Streamlit scoring+explanation app for that location — nothing already built gets thrown away.
+- [ ] **Expand beyond one country.** Once the pattern works for one country, confirm it holds for others before calling this "a world map."
+
 ## Workflow
 
 - Every change to this project gets a written plan first (what's changing, why, files touched) for review and approval before implementation — logged in [PLAN.md](PLAN.md) so there's a record of what was proposed, independent of chat history.

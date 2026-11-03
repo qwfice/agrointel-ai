@@ -4,6 +4,14 @@ A running log of every plan proposed for this project, newest first. Each entry 
 
 ---
 
+## World map (GEE) — Set up Google Earth Engine access
+
+**Status:** pending approval
+
+**Brief:** register a free Google Earth Engine account/project (this needs the user to sign up themselves - not something Claude can create), enable the Earth Engine API, and verify access with a minimal script before building anything real. First step of a new, bigger feature: a world map where a farmer picks a country and sees a live-highlighted crop-suitability layer, with our existing Streamlit app as the detailed per-location view once a spot is selected (architecture decision: GEE for the map/compute layer, since it already solves the "analyze a whole country, live, without downloading huge raster files ourselves" problem our earlier SMAP/GPM pulls struggled with - see the reference app https://total-service-474209-k1.projects.earthengine.app/view/bagis this is modeled after). Nothing already built (scoring model, explanations, sliders) gets replaced - the map becomes the entry point into it.
+
+---
+
 ## Goal 7 — Carry over the honesty/limitations stance
 
 **Status:** done
