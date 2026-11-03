@@ -6,9 +6,9 @@ A running log of every plan proposed for this project, newest first. Each entry 
 
 ## Goal 7 — Carry over the honesty/limitations stance
 
-**Status:** pending approval
+**Status:** done
 
-**Brief:** review the whole app/repo against the research plan's own stance ("decision support, not guaranteed outcomes") and confirm every static assumption and data gap already called out in code/GOALS.md is also visible to someone just using the app, not just reading source.
+**Brief:** added a consolidated "Model Limitations" section to `app.py`, sourced from the research plan's own Section 12 (scoped to what we've actually built — no MODIS/NDVI mentions yet). Also corrected `README.md`, which previously implied MODIS/Landsat were already integrated. Verified rendering in Chrome. All 7 goals are now done.
 
 ---
 
