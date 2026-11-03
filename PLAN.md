@@ -4,6 +4,28 @@ A running log of every plan proposed for this project, newest first. Each entry 
 
 ---
 
+## Real, per-location Suitability Index overlay on the website map (expanded: grid heatmap + model selector)
+
+**Status:** done — verified live in Chrome with the default Iowa farm (uniform real data at that scale, correctly so — small area, similar climate) and a Punjab, India search (real boundingBox-derived grid with real variation). Confirmed switching models re-renders instantly with zero new network requests (reuses already-fetched data). Reduced grid size to 16 points (4×4, capped) to keep per-search API calls reasonable; increased rectangle fill opacity + white borders after the first pass rendered but was visually invisible against the satellite basemap. Dropped the stale `toggleOverlay`/checkbox-based chat commands (referenced removed DOM elements) in favor of `setSuitabilityModel`.
+
+Expanded after the user shared a reference image (a landslide-susceptibility-mapping paper figure: multiple model panels, each a full color-graded raster over terrain, 5-class legend Very High→Very Low). User wanted the same idea here: a painted suitability/risk layer across the searched area, switchable between different real "models" (weather-condition views), not just point circles.
+
+**Context:** The map's "Vulnerability Overlays" (erosion risk, water-stress hotspots, frost-prone areas — `script.js:163-191`) are hardcoded fixed-coordinate shapes drawn only around the sample Iowa farm; illustrative placeholders, not real data. Decided with the user: build on real point-data from our own API (not Google Earth Engine — that's a much bigger separate effort), but sample a **grid of points** across the searched area instead of a single point, so it reads as a painted layer like the reference image.
+
+**Brief:**
+1. Remove the 3 hardcoded static zones and their checkboxes. Replace with: a **"Map Model" dropdown** (Erosion Risk / Water Stress / Overall Suitability) and a fixed 5-class legend (Very High/High/Moderate/Low/Very Low), styled like the reference image.
+2. On initial load (Iowa farm) and every successful place search, build a small bounding box around the location — Nominatim's search result includes a real `boundingbox` for places/countries; fall back to a fixed ±1° box around a bare point (e.g. the default farm). Sample an adaptive grid of points inside it, capped at ~36 points total to keep it fast and within NASA POWER's rate limits.
+3. Fetch `/indicators` (POWER-only, `include_soil_moisture: false`) for every grid point in parallel. Store each point's real `temp_anomaly_mean_c`, `extreme_rainfall_days`, `longest_dry_spell_days`. This is one batch of real calls per search — never precomputed for anywhere the user hasn't searched.
+4. Derive 3 real "models" from that same fetched data (no extra calls needed to switch models client-side):
+   - **Erosion Risk** — from `extreme_rainfall_days`.
+   - **Water Stress** — from `longest_dry_spell_days` + `temp_anomaly_mean_c`.
+   - **Overall Suitability** — top-ranked strategy's real `overall_score` from one `/score` call per grid point (reusing the already-fetched indicators).
+5. Classify each grid cell into the 5 legend classes (quantile-based thresholds over the current grid's own values) and paint it as a semi-transparent colored rectangle covering that cell — switching the dropdown just recolors the existing grid instantly, no refetch.
+6. Frost is dropped from the model list (no real frost/min-temp field in our API) rather than faking it — consistent with the project's honesty-about-data-limits stance.
+7. Show a "Computing real data for [place]…" loading state while the grid fetches; cache the grid per search so re-searching the same place doesn't refetch.
+8. Demo in Chrome: confirm the default Iowa grid paints real values, switch between all 3 models and confirm colors change, then search a different place (e.g. Punjab, India) and confirm a new real grid renders there — checked via the Network tab, not just visually.
+9. Commit and push to the same `A.I-integration` branch (updates PR #1). Update `GOALS.md`.
+
 ## Wire real AGROINTEL AI into the updated agrointel-website chatbot (v2 site)
 
 **Status:** done — verified live in Chrome. Along the way: fixed the same `markers` TDZ bug as before, fixed the `.chat-panel { display: flex }` CSS rule that was silently defeating the native `[hidden]` attribute so the minimize/expand toggle did nothing, narrowed the keyword-command matching (only applies to short non-question phrases, ≤4 words and no "?") so real questions like "what's the best rotation strategy here?" fall through to the real AI instead of just scrolling the page, and switched the markdown formatter from paragraph-block-based to line-based so a bullet list right under a heading (no blank line between them) still renders as a real `<ul>` instead of literal `* ` text.
