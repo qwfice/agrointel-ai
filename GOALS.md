@@ -16,8 +16,8 @@ Check a box off only once the corresponding goal is actually working and verifie
 
 Beyond the 7 core goals above, these are gaps between "a working tool for one location" and a full NASA Space Apps submission.
 
-- [ ] **Test at a second and third location.** The research plan calls for 3 contrasting environments (California, Punjab India, Cameron Highlands Malaysia) to show the tool generalizes — right now everything has only been proven for Kern County, CA.
-- [ ] **Add a location picker to the app.** Even with more locations' data pulled, there's currently no UI to switch between them.
+- [x] **Test at a second and third location.** The research plan calls for 3 contrasting environments (California, Punjab India, Cameron Highlands Malaysia) to show the tool generalizes. *Done: the app is now location-agnostic (live NASA fetch per location, not a pre-saved file) and verified with genuinely different real results for Kern County, CA and Punjab, India; Cameron Highlands, Malaysia verified standalone (SMAP has since hit a rate-limit during repeated testing - noted below, not a correctness issue).*
+- [x] **Add a location picker to the app.** Even with more locations' data pulled, there's currently no UI to switch between them. *Done: preset dropdown (the plan's 3 research locations) + custom lat/lon input in `app.py`, backed by `src/indicators/live.py`.*
 - [ ] **Deploy the app somewhere public.** It only runs locally right now — needs a live URL (e.g. Streamlit Community Cloud) so it can actually be tried without someone's own dev environment.
 - [ ] **Integrate real supporting agricultural data.** Water-use, pest/disease, and economic scores are still documented assumptions, not real FAO crop-water data, local pest records, or market prices.
 - [ ] **Prepare submission materials.** A project pitch/demo summary, screenshots or a short video — a README alone isn't a hackathon submission.
@@ -40,6 +40,15 @@ See [PLAN.md](PLAN.md) for the cleaned-up source and open architecture questions
 - [ ] **Cookie consent choice.** Accept/decline, per the doc.
 - [ ] **Farmer/expert report submission + admin review.** Entirely new scope — no design yet.
 - [ ] **Direct location search** (type a place name, not just click the map) — partially covered by the World Map country picker, not yet for arbitrary sub-country locations.
+
+## External integration goals (FieldCycle / Bubble)
+
+The team's FieldCycle app (Bubble.io) already has NASA POWER, OpenStreetMap geocoding, and SRTM wired up via Bubble's API Connector plugin — the same pattern we need for our AI.
+
+- [x] **Build a public-shaped API locally.** `api/main.py` (FastAPI) wrapping our existing logic, no duplication — `/indicators`, `/score`, `/chat`. *Done: all three endpoints verified working via real HTTP requests with real data (not deployed publicly yet, runs on localhost only).*
+- [ ] **Deploy the API publicly.** Needs a hosting decision (Render/Railway/Fly.io) and real deployment - only then can an external site reach it.
+- [ ] **Wire up Bubble's API Connector.** Add a new API entry in FieldCycle pointing at the deployed URL, same pattern as the existing 3 integrations.
+- [ ] **Add a chat UI element to FieldCycle** that calls it.
 
 ## Workflow
 

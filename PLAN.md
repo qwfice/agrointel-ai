@@ -6,7 +6,7 @@ A running log of every plan proposed for this project, newest first. Each entry 
 
 ## Build a public API so FieldCycle (Bubble) can call our AI
 
-**Status:** approved, in progress
+**Status:** done (local only — deployment is a separate follow-up step)
 
 **Brief:** FieldCycle's Bubble app already has the API Connector plugin installed with 3 working integrations (NASA POWER, Photon OpenStreetMap geocoding, SRTM via OpenTopoData) - the exact same pattern we need, just no entry for our AI yet. This step builds what that entry would point to:
 
@@ -23,7 +23,7 @@ A running log of every plan proposed for this project, newest first. Each entry 
 
 ## Make the main app location-agnostic (any latitude/longitude, not just Kern County)
 
-**Status:** approved, in progress
+**Status:** done — verified with Kern County CA and Punjab India producing genuinely different real results; found and fixed a real SMAP login bug and a missing-timeout bug along the way
 
 **Brief:** our NASA data clients (`src/data/nasa_power.py`, `nasa_smap.py`, `nasa_gpm.py`) are already global - they take any lat/lon. The gap is that `app.py` only ever loads Kern County's pre-saved CSV, so the scores and chat assistant only ever "know" that one place. This fixes that:
 
