@@ -4,6 +4,23 @@ A running log of every plan proposed for this project, newest first. Each entry 
 
 ---
 
+## Heatmap: accurate real-shape outlining (not just a rectangle)
+
+**Status:** done — verified live in Chrome with Malaysia (multi-part: Peninsular + Borneo, confirmed real colored coverage on both parts, zero color in Thailand/Indonesia/ocean) and Kenya (single polygon, no regression). Fixed a real gap found during testing: gridding one box over a multi-part country's whole combined bounding box left almost every sample point in open ocean between the parts (Malaysia initially came back with only 2 fetched points) — fixed by gridding each landmass part separately (`siBuildGridForGeometry`, capped to the 4 largest parts by area) instead of one grid over the full extent.
+
+**Context:** Screenshot showed a Malaysia search painting a small blob that didn't reach Peninsular Malaysia's coast and entirely missed East Malaysia (Borneo) — because the heatmap is sampled over the map's rectangular viewport, not the country's real (and in Malaysia's case, split/multi-part) shape. User wants the color to actually follow real borders/coastlines.
+
+**Brief:**
+1. Request real boundary geometry from Nominatim (already used for search) by adding `polygon_geojson=1&polygon_threshold=0.01` to the existing search request — the threshold keeps geometry reasonably light so a detailed coastline doesn't bog down the browser.
+2. On search, fit the map to the real shape's full extent (`L.geoJSON(geometry).getBounds()` + `map.fitBounds`) instead of a fixed zoom level, and draw a thin real boundary outline on the map so there's a visible, accurate border — not just inferred from the heat color.
+3. Filter the SI sample grid to only points whose coordinates fall **inside** the real polygon (a point-in-polygon test, handling multi-part countries like Malaysia), before fetching — ocean and neighboring-country points are skipped entirely, never fetched, never colored.
+4. Scope note, said plainly: this won't be a pixel-perfect clip exactly at the coastline (the heat blur still softly feathers a little past sampled points near the edge) — true hard-edge clipping to an arbitrary, possibly very detailed multi-island coastline is a much heavier technique (canvas/SVG masking) with real performance risk for complex country shapes, and isn't worth the fragility here. The combination of inside-only sampling + a real boundary outline gets the accuracy that matters (no color in the wrong country/ocean, full real coverage of multi-part countries) without that risk.
+5. Default farm view (no search) is unaffected — no geometry, same bare-point behavior as before.
+6. Demo in Chrome: re-search Malaysia and confirm both the peninsula and Borneo get real sampled/colored coverage, with no color in the ocean or Thailand; also test a simple single-polygon country (e.g. Kenya) to confirm no regression.
+7. Commit and push to `A.I-integration` (updates PR #1).
+
+---
+
 ## Heatmap: smoother blending, full-viewport coverage, enable/disable toggle
 
 **Status:** done — verified live in Chrome (Iowa default view and a Kenya search), toggle confirmed on/off/back-on with cache reuse. Hit and fixed a real bug along the way: `map.getBounds()` was read before Leaflet had the container's final size (classic stale-size issue), so the heatmap covered only a fraction of the visible map — fixed with `map.invalidateSize()` right before reading bounds.
