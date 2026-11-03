@@ -46,7 +46,7 @@ See [PLAN.md](PLAN.md) for the cleaned-up source and open architecture questions
 The team's FieldCycle app (Bubble.io) already has NASA POWER, OpenStreetMap geocoding, and SRTM wired up via Bubble's API Connector plugin — the same pattern we need for our AI.
 
 - [x] **Build a public-shaped API locally.** `api/main.py` (FastAPI) wrapping our existing logic, no duplication — `/indicators`, `/score`, `/chat`. *Done: all three endpoints verified working via real HTTP requests with real data (not deployed publicly yet, runs on localhost only).*
-- [ ] **Deploy the API publicly.** Needs a hosting decision (Render/Railway/Fly.io) and real deployment - only then can an external site reach it.
+- [x] **Deploy the API publicly.** *Done: live at https://agrointel-ai-api.vercel.app on Vercel, auto-deploying from `main`. All 4 endpoints verified against the live URL with real data: `/` (health check), `/indicators` (real Kern County NASA POWER data), `/score` (real ranked strategy comparisons), `/chat` (grounded Gemini answer citing the real scores). Fixed two real bugs found during deployment: a trimmed `api/requirements.txt` (root requirements.txt pulled in Streamlit/Earth Engine/matplotlib and blew the 500MB Lambda size limit) and a missing `h5py` pin (silently relied on it already being installed locally).*
 - [ ] **Wire up Bubble's API Connector.** Add a new API entry in FieldCycle pointing at the deployed URL, same pattern as the existing 3 integrations.
 - [ ] **Add a chat UI element to FieldCycle** that calls it.
 

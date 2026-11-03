@@ -12,7 +12,7 @@ A running log of every plan proposed for this project, newest first. Each entry 
 
 ## Deploy the API to Vercel (replaces the Render plan above)
 
-**Status:** approved, in progress
+**Status:** done — live at https://agrointel-ai-api.vercel.app, all 4 endpoints verified with real data and a real Gemini answer. Along the way: fixed a GitHub App repo-access permission (Vercel couldn't see the repo until authorized), a Lambda-size overrun from the unscoped root requirements.txt (fixed with a trimmed `api/requirements.txt`), and a missing `h5py` pin that crashed every request.
 
 **Brief:** get `api/main.py` running on a public URL via Vercel instead of Render - no payment card required for the Hobby tier, and it's the host the team originally said they'd use for the website anyway. Using the Vercel MCP tools directly (no browser automation needed):
 
