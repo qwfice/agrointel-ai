@@ -4,6 +4,45 @@ A running log of every plan proposed for this project, newest first. Each entry 
 
 ---
 
+## Product vision — from the team's "Nasa Space Apps" Google Doc (cleaned up)
+
+**Status:** pending approval — open questions below need answers before this becomes buildable steps
+
+**Source:** the team's `Nasa Space Apps` Google Doc, rough notes rewritten here for clarity. Original wording preserved in meaning, just organized.
+
+### Website requirements
+
+- No user accounts or login required — anyone can use it immediately.
+- A user can type in a location directly (no need to click around a map first) to jump to it.
+- A world map highlights areas with good soil, based on real NASA data (this is what our Earth Engine suitability layer already does — see GOALS.md).
+- A small vertical chat panel on the left, backed by a small language model (SLM), so users can ask for help while using the site.
+- A cookie-consent choice (accept or decline).
+- Farmers and agricultural experts can submit reports/feedback through the site, which go to an admin for review.
+- Users see an indicator that explains what type of soil condition exists at their chosen location, and why (tied to the real computed data, not a black box).
+- The AI helps forecast likely future weather conditions for a location, based on the data it's been given.
+- The map highlights: when fields are typically bare, seasons when current crops are more vulnerable, and opportunities for rotations that could interrupt pest cycles, reduce water demand, improve infiltration, or add supplemental income.
+- The AI compares at least three rotation strategies (including the farmer's existing one). For each: why it was suggested, what evidence supports it, what benefits it may offer, where the information gaps are, and what risks need local review — this is exactly what `src/explanations/narrative.py` already produces for Kern County.
+
+### "AI" in the product
+
+- Trained/fed on datasets such as SMAP, ECOSTRESS, GPM, Landsat, MODIS, NASA POWER, GRACE/GRACE-FO, and SRTM (we currently use POWER, SMAP, GPM, and SRTM — ECOSTRESS, Landsat, MODIS, and GRACE/GRACE-FO are not yet integrated; see GOALS.md).
+- Helps determine likely future crop health from the fed-in data, and helps the user figure out the best crop rotation and planting area next.
+
+### Deployment target
+
+- The team wants to launch the website on **Vercel**.
+
+### Open questions I need answered before this is a real plan (not doubts to brush past — actual blockers)
+
+1. **Vercel doesn't run Python/Streamlit apps or Google Earth Engine compute directly.** Vercel is built for frontend frameworks (Next.js, static sites) and lightweight serverless functions — not a full Streamlit app or long-running GEE calls like ours. To launch on Vercel, we'd need one of:
+   - A new frontend (e.g. Next.js) on Vercel, calling our existing Python logic (scoring/indicators/explanations/GEE) through a separately-hosted API (e.g. a small FastAPI service on Render/Railway/Fly.io) — our Python code stays, just gets a new thin API wrapper and a new UI.
+   - Or: this product is actually the Bubble.io "FieldCycle" app (same name appears in the doc) — in which case Vercel isn't the host at all, Bubble is, and "Vercel" might mean something else was meant. Needs clarifying.
+2. **Is this the same product as FieldCycle, or a separate one?** The doc explicitly names "FieldCycle," which is the teammate's Bubble.io app we already reviewed. Are we building *one* combined product (our backend + a new Vercel frontend, replacing or complementing Bubble), or is this a third, separate build? This changes the whole plan.
+3. **The SLM chat assistant and the admin report-review system are both entirely new scope** — nothing like either exists yet in our repo or (as far as I saw) in FieldCycle. These are real features needing their own design, not small additions.
+4. **"User authentication not needed" is good news** — it keeps scope down, no login system needed.
+
+---
+
 ## World map (GEE) — Build the world map interface (country search)
 
 **Status:** done
