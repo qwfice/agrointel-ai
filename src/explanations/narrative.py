@@ -9,7 +9,7 @@ static per-strategy agronomic text, written by hand, not computed.
 
 from __future__ import annotations
 
-from src.scoring.criteria import _CLIMATE_VULNERABILITY, _EROSION_VULNERABILITY
+from src.scoring.criteria import _CLIMATE_VULNERABILITY, _EROSION_VULNERABILITY, criteria_confidence
 
 _STRATEGY_LABELS = {
     "conventional": "Conventional (Tomato -> Cabbage -> Lettuce)",
@@ -36,18 +36,29 @@ _BENEFITS = {
 
 _GAPS = {
     "conventional": [
-        "Water-use suitability (40/100) and economic suitability (70/100) are static agronomic assumptions, not derived from local FAO crop-water data or actual market prices.",
+        "Economic suitability (70/100) is a static agronomic assumption, not derived from actual local market prices.",
         "Pest/disease interruption (45/100) is a general assumption about family diversity, not based on local pest records.",
     ],
     "legume": [
         "Soil-health potential (70/100) assumes typical nitrogen fixation; actual nitrogen contribution depends on bean variety, biomass, and residue management not modeled here (the research plan flags this explicitly).",
-        "Water-use and economic suitability scores are static assumptions pending real local data.",
+        "Economic suitability score is a static assumption pending real local market data.",
     ],
     "soil_conservation": [
         "Economic suitability (35/100) assumes no direct harvest value for the cover crop; if it is grazed or sold as biomass locally, this score understates its value.",
-        "Water-use suitability assumes a low-water cover crop species; actual water use depends on which cover crop is planted, which is not specified here.",
     ],
 }
+
+_WATER_GAP_NO_DATA = (
+    "Water-use suitability couldn't be adjusted with a real rainfall anomaly for this location/window "
+    "(a real NASA data gap, not an error) - it's using its static agronomic starting-point assumption "
+    "for now, pending real FAO crop-water-requirement data for a fuller picture."
+)
+_WATER_GAP_WITH_DATA = (
+    "Water-use suitability's starting point is still a static agronomic assumption about this "
+    "strategy's crops - the real rainfall anomaly only nudges it up or down for this season's actual "
+    "conditions, it doesn't replace the underlying assumption. Real local FAO crop-water-requirement "
+    "data would give a fuller picture."
+)
 
 _RISKS = {
     "conventional": [
@@ -77,13 +88,35 @@ def evidence_for(strategy: str, criteria_scores: dict[str, float], indicators: d
     )
 
     extreme_days = indicators["extreme_rainfall_days"]
+    extreme_threshold = indicators.get("extreme_rainfall_threshold_mm")
     erosion_vuln = _EROSION_VULNERABILITY[strategy]
+    threshold_clause = (
+        f" ('extreme' here means over {extreme_threshold:.1f}mm/day, this location's own "
+        f"historical 90th-percentile.)"
+        if extreme_threshold is not None
+        else ""
+    )
     evidence.append(
         f"Erosion reduction scored {criteria_scores['erosion_reduction']:.1f}/100. Real observed "
         f"conditions included {extreme_days:.0f} day(s) exceeding the historical 90th-percentile "
-        f"rainfall threshold. This strategy is modeled with a {erosion_vuln:.1f}x erosion-protection "
-        f"vulnerability factor."
+        f"rainfall threshold.{threshold_clause} This strategy is modeled with a {erosion_vuln:.1f}x "
+        f"erosion-protection vulnerability factor."
     )
+
+    rain_anom = indicators.get("rainfall_anomaly_pct")
+    if rain_anom is not None:
+        direction = "wetter" if rain_anom >= 0 else "drier"
+        evidence.append(
+            f"Water-use suitability scored {criteria_scores['water_use_suitability']:.1f}/100, starting "
+            f"from a static agronomic baseline and adjusted using the real observed rainfall for this "
+            f"location: {abs(rain_anom):.1f}% {direction} than this calendar month's 5-year average."
+        )
+    else:
+        evidence.append(
+            "Water-use suitability couldn't be adjusted with a real rainfall anomaly for this "
+            "location/window (a real NASA data coverage gap) - it's using its static agronomic "
+            "baseline only, see information gaps."
+        )
 
     wetness = indicators["soil_moisture_relative_wetness_mean"]
     if wetness is None:
@@ -104,13 +137,15 @@ def evidence_for(strategy: str, criteria_scores: dict[str, float], indicators: d
 
 def build_comparison(strategy: str, criteria_scores: dict[str, float], overall_score: float, indicators: dict) -> dict:
     """Full comparison entry for one strategy: label, score, evidence, benefits, gaps, risks."""
+    water_gap = _WATER_GAP_WITH_DATA if indicators.get("rainfall_anomaly_pct") is not None else _WATER_GAP_NO_DATA
     return {
         "strategy": strategy,
         "label": _STRATEGY_LABELS[strategy],
         "overall_score": overall_score,
         "criteria_scores": criteria_scores,
+        "criteria_confidence": criteria_confidence(indicators),
         "evidence": evidence_for(strategy, criteria_scores, indicators),
         "benefits": _BENEFITS[strategy],
-        "information_gaps": _GAPS[strategy],
+        "information_gaps": _GAPS[strategy] + [water_gap],
         "risks": _RISKS[strategy],
     }

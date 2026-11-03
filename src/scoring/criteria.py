@@ -46,11 +46,20 @@ WATER_USE_SUITABILITY_BASE = {
     # Tomato/cabbage/lettuce are all moderate-to-high water users grown
     # back-to-back. Beans have somewhat lower water demand. Cover crops
     # (e.g. drought-tolerant grasses/legumes) are typically the lowest.
-    # NOTE: static assumption pending real FAO crop-water-requirement data.
+    # NOTE: this starting point is a static assumption pending real FAO
+    # crop-water-requirement data - but see water_use_suitability() below,
+    # which adjusts it with the real NASA rainfall anomaly when available.
     "conventional": 40,
     "legume": 55,
     "soil_conservation": 65,
 }
+
+# How much each strategy's water-use score moves with real observed
+# rainfall anomalies: a conventional rotation of moderate-to-high water
+# users is modeled as most exposed to a dry or wet anomaly; a low-water
+# cover-crop rotation is modeled as least exposed. This vulnerability
+# scaling (not the rainfall data itself) is the agronomic assumption here.
+_WATER_VULNERABILITY = {"conventional": 1.0, "legume": 0.7, "soil_conservation": 0.4}
 
 ECONOMIC_SUITABILITY_BASE = {
     # Conventional vegetables have established markets and immediate sale
@@ -101,11 +110,50 @@ def erosion_reduction(strategy: str, indicators: dict) -> float:
     return max(0.0, min(100.0, base - penalty))
 
 
+def water_use_suitability(strategy: str, indicators: dict) -> float:
+    """Water-use suitability score (0-100).
+
+    Starts from the static agronomic baseline above, then - when a real
+    rainfall anomaly is available for this location - adjusts it: a drier-
+    than-normal month penalizes higher-water strategies more, a wetter-than-
+    normal month helps them somewhat, scaled by the strategy's assumed water
+    demand. The adjustment is deliberately capped (smaller upside than
+    downside) so one wet month can't inflate a score more than a real dry
+    spell can depress it. Falls back to the pure baseline when no rainfall
+    anomaly is available for this location/window (real SMAP/POWER gaps
+    happen) - see `criteria_confidence()` for which case applied.
+    """
+    base = WATER_USE_SUITABILITY_BASE[strategy]
+    rain_anom_pct = indicators.get("rainfall_anomaly_pct")
+    if rain_anom_pct is None:
+        return float(base)
+    adjustment = rain_anom_pct * 0.3 * _WATER_VULNERABILITY[strategy]
+    adjustment = max(-30.0, min(15.0, adjustment))
+    return max(0.0, min(100.0, base + adjustment))
+
+
+def criteria_confidence(indicators: dict) -> dict[str, str]:
+    """Per-criterion provenance tag: 'real_data' only where the score above is
+    actually computed from real NASA-derived numbers for this request,
+    'expert_baseline' where it's a static documented agronomic assumption.
+    Lets the website/chat show the user exactly what's measured vs. assumed,
+    instead of presenting every number with the same implied confidence.
+    """
+    return {
+        "soil_health_potential": "expert_baseline",
+        "water_use_suitability": "real_data" if indicators.get("rainfall_anomaly_pct") is not None else "expert_baseline",
+        "climate_resilience": "real_data",
+        "pest_disease_interruption": "expert_baseline",
+        "erosion_reduction": "real_data",
+        "economic_suitability": "expert_baseline",
+    }
+
+
 def score_all_criteria(strategy: str, indicators: dict) -> dict[str, float]:
     """All six criterion scores (0-100) for one strategy."""
     return {
         "soil_health_potential": float(SOIL_HEALTH_POTENTIAL_BASE[strategy]),
-        "water_use_suitability": float(WATER_USE_SUITABILITY_BASE[strategy]),
+        "water_use_suitability": water_use_suitability(strategy, indicators),
         "climate_resilience": climate_resilience(strategy, indicators),
         "pest_disease_interruption": float(PEST_DISEASE_INTERRUPTION_BASE[strategy]),
         "erosion_reduction": erosion_reduction(strategy, indicators),

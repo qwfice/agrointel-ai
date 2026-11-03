@@ -81,13 +81,20 @@ def fetch_and_compute_indicators(lat: float, lon: float, include_soil_moisture: 
 
     temp_anom = temperature_anomaly(power, str(eval_start.date()), str(eval_end.date()))
     dry_spell = longest_dry_spell(power, str(eval_start.date()), str(eval_end.date()))
-    extreme_count, _ = extreme_rainfall_days(power, str(eval_start.date()), str(eval_end.date()))
+    extreme_count, extreme_threshold_mm = extreme_rainfall_days(power, str(eval_start.date()), str(eval_end.date()))
+    rain_anom = rainfall_anomaly_pct(power, str(eval_start.date()), str(eval_end.date())).dropna()
 
     indicators = {
         "temp_anomaly_mean_c": round(float(temp_anom.mean()), 2),
         "temp_anomaly_max_c": round(float(temp_anom.max()), 2),
         "longest_dry_spell_days": dry_spell,
         "extreme_rainfall_days": extreme_count,
+        "extreme_rainfall_threshold_mm": round(float(extreme_threshold_mm), 2),
+        # % diff from this month's historical average rainfall, over the eval window's
+        # covered calendar month(s). A 30-day window can span a partial month at each
+        # end, so this is a real but sometimes single-month reading - null when no
+        # full month's data falls inside the window.
+        "rainfall_anomaly_pct": round(float(rain_anom.mean()), 1) if not rain_anom.empty else None,
     }
 
     if not include_soil_moisture:

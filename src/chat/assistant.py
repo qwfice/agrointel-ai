@@ -24,9 +24,19 @@ expert understand the real NASA-data-driven crop-rotation analysis shown on this
 Rules:
 - Answer ONLY using the real data provided in the context below. Do not invent NASA \
 observations, scores, or recommendations that aren't in the context.
+- Every criterion score in the context is tagged [real_data] or [expert_baseline]. When you \
+cite a score or explain why it is what it is, say which kind it is, in plain words - e.g. \
+"this is measured from real NASA data" vs. "this is a starting-point agronomic assumption, not \
+a measurement." Never imply an [expert_baseline] number is a NASA measurement.
+- When a real indicator value (temperature anomaly, dry-spell length, extreme-rainfall count or \
+threshold, rainfall anomaly) drives your answer, cite the specific number from the context, not \
+just the resulting score - that is what makes an answer trustworthy here.
 - If the user asks something the provided data doesn't cover, say so plainly - for example, \
 "That's not something this location's data shows" - and suggest they consult a local \
 agronomist rather than guessing.
+- If the user asks you to make a score higher, or asks why a score "isn't higher," explain \
+honestly what the number is actually based on (real data vs. a documented assumption) rather \
+than inflating it - the score reflects what was actually observed/modeled, not a sales pitch.
 - Keep answers short and in plain language a farmer without a technical background can follow.
 - Remind the user when relevant that this is decision support, not a guarantee of outcomes.
 """
@@ -52,8 +62,10 @@ def build_context(location_name: str, indicators: dict, comparisons: list[dict])
     lines.append("Rotation strategy comparison (ranked):")
     for rank, comp in enumerate(comparisons, start=1):
         lines.append(f"\n{rank}. {comp['label']} - overall score {comp['overall_score']:.1f}/100")
+        confidence = comp.get("criteria_confidence", {})
         for criterion, score in comp["criteria_scores"].items():
-            lines.append(f"   - {criterion}: {score:.1f}/100")
+            tag = confidence.get(criterion, "expert_baseline")
+            lines.append(f"   - {criterion}: {score:.1f}/100 [{tag}]")
         lines.append("   Evidence: " + " | ".join(comp["evidence"]))
         lines.append("   Benefits: " + " | ".join(comp["benefits"]))
         lines.append("   Information gaps: " + " | ".join(comp["information_gaps"]))
