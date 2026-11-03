@@ -31,10 +31,27 @@ COUNTRY_BOUNDARIES = "USDOS/LSIB_SIMPLE/2017"
 RECENT_MONTHS = 6
 
 
+def list_country_names() -> list[str]:
+    """All country names available in the boundaries dataset, sorted."""
+    countries = ee.FeatureCollection(COUNTRY_BOUNDARIES)
+    names = countries.aggregate_array("country_na").getInfo()
+    return sorted(set(names))
+
+
 def country_boundary(country_name: str = COUNTRY_NAME) -> ee.Geometry:
     countries = ee.FeatureCollection(COUNTRY_BOUNDARIES)
     match = countries.filter(ee.Filter.eq("country_na", country_name))
     return match.geometry()
+
+
+def country_bounds_latlon(region: ee.Geometry) -> list[list[float]]:
+    """[[south, west], [north, east]] for folium's fit_bounds, computed
+    server-side from the real geometry (not a hardcoded per-country value).
+    """
+    coords = region.bounds().coordinates().get(0).getInfo()
+    lons = [c[0] for c in coords]
+    lats = [c[1] for c in coords]
+    return [[min(lats), min(lons)], [max(lats), max(lons)]]
 
 
 def _normalize(image: ee.Image, band: str, low: float, high: float) -> ee.Image:
@@ -43,14 +60,20 @@ def _normalize(image: ee.Image, band: str, low: float, high: float) -> ee.Image:
     return clamped.subtract(low).divide(high - low).rename(f"{band}_norm")
 
 
-def build_suitability_image(region: ee.Geometry | None = None) -> tuple[ee.Image, ee.Geometry]:
-    """Build the real suitability image for the given region (default: Malaysia).
+def build_suitability_image(
+    region: ee.Geometry | None = None, country_name: str = COUNTRY_NAME
+) -> tuple[ee.Image, ee.Geometry]:
+    """Build the real suitability image for a country (or an explicit region).
+
+    Args:
+        region: an explicit geometry to use instead of looking up a country.
+        country_name: looked up via country_boundary() when `region` is None.
 
     Returns:
         (suitability_image, region) — suitability_image has a single band
         "suitability" in [0, 100].
     """
-    region = region or country_boundary()
+    region = region or country_boundary(country_name)
     end = ee.Date(ee.Date(ee.Image(ee.ImageCollection(GPM_COLLECTION).sort("system:time_start", False).first()).get("system:time_start")))
     start = end.advance(-RECENT_MONTHS, "month")
 
