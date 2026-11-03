@@ -12,6 +12,16 @@ These are the gaps between the original research plan (`docs/AGROINTEL_AI_Resear
 
 Check a box off only once the corresponding goal is actually working and verified in the repo — not when a plan for it is merely approved.
 
+## Submission-readiness goals
+
+Beyond the 7 core goals above, these are gaps between "a working tool for one location" and a full NASA Space Apps submission.
+
+- [ ] **Test at a second and third location.** The research plan calls for 3 contrasting environments (California, Punjab India, Cameron Highlands Malaysia) to show the tool generalizes — right now everything has only been proven for Kern County, CA.
+- [ ] **Add a location picker to the app.** Even with more locations' data pulled, there's currently no UI to switch between them.
+- [ ] **Deploy the app somewhere public.** It only runs locally right now — needs a live URL (e.g. Streamlit Community Cloud) so it can actually be tried without someone's own dev environment.
+- [ ] **Integrate real supporting agricultural data.** Water-use, pest/disease, and economic scores are still documented assumptions, not real FAO crop-water data, local pest records, or market prices.
+- [ ] **Prepare submission materials.** A project pitch/demo summary, screenshots or a short video — a README alone isn't a hackathon submission.
+
 ## Workflow
 
 - Every change to this project gets a written plan first (what's changing, why, files touched) for review and approval before implementation — logged in [PLAN.md](PLAN.md) so there's a record of what was proposed, independent of chat history.
