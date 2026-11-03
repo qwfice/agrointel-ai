@@ -4,6 +4,14 @@ A running log of every plan proposed for this project, newest first. Each entry 
 
 ---
 
+## World map (GEE) — Prove the suitability-layer concept for one country
+
+**Status:** pending approval
+
+**Brief:** build `src/geo/suitability.py` — pulls real Earth Engine data for India's boundary (ties back to the research plan's Location 2, Punjab India): precipitation (GPM), terrain slope (from SRTM elevation), and soil moisture (SMAP), combined into a simple 0-100 suitability score per pixel, classified into Low/Medium/High bands matching the reference app's legend style. Generates a real map image painted over India, verified visually in Chrome for geographic plausibility (e.g. river plains should score higher than the Himalayas/Thar desert). Does not yet include the interactive clickable map, country search, or linking to the Streamlit detail view - just proves the underlying computation works for a real country.
+
+---
+
 ## World map (GEE) — Set up Google Earth Engine access
 
 **Status:** done
