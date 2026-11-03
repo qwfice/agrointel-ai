@@ -4,6 +4,27 @@ A running log of every plan proposed for this project, newest first. Each entry 
 
 ---
 
+## Sync the chatbot to the map, and add real per-search crop-suitability markers
+
+**Status:** pending approval
+
+**Context:** User sent 3 screenshots. (1) Asked the chat "go to malaysia on the map" in the chat box — it failed with "Sorry, I could not find that place." (2) A follow-up question about Malaysia got answered with Iowa data ("The data provided is specifically for Central Iowa, USA... not Malaysia") — because the chat's indicators call is hardcoded to `FARM_LAT`/`FARM_LON` no matter what the map is actually showing. (3) A screenshot of the site's existing hardcoded "East Block – Diversification Candidate" marker/popup for the sample Iowa farm. User wants: the chatbot to actually show/sync the map to the area it's discussing while explaining it, and that same marker+popup pattern (real data, suitable-crop note) generated for *any* country/region/city/district the user searches, not just the 3 fixed Iowa points.
+
+**Root causes found in `script.js`:**
+1. `searchPlace()` sends the raw chat text (minus "go to ") straight to Nominatim. "malaysia on the map" fails to geocode because of the trailing "on the map" - Nominatim needs just the place name.
+2. `getAgrointelIndicators()` is hardcoded to `FARM_LAT`/`FARM_LON`/`AGROINTEL_LOCATION_LABEL` and cached in one single global promise - so **every** chat question is answered from Iowa data forever, regardless of what place the map/search is currently showing. This explains screenshot 2 exactly.
+3. The only existing crop-suitability markers (`fields` array, 3 hardcoded points) are static Iowa-only text, not generated from real data, and don't exist for any other location.
+
+**Brief:**
+1. **Fix the "go to" query bug:** strip trailing filler phrases ("on the map", "on earth", "please", etc.) from the chat's place query before geocoding.
+2. **Make the chat genuinely location-aware:** replace the single hardcoded Iowa indicators cache with a per-location cache keyed by rounded lat/lon, sourced from `siLastLocation` (the map's current search/focus) instead of always `FARM_LAT`/`FARM_LON`. Every chat answer - and the context sent to Gemini - will then reflect whatever place is actually centered on the map.
+3. **Let a free-form question move the map too:** lightly parse the raw question for an "in/for/at/near <Place>" pattern; if found, geocode it and pan/fit the map there (same as a "go to" command) *before* answering, so asking "what should I plant in Kenya?" directly shows Kenya while the AI explains it - not just after an explicit "go to" first. Falls back to whatever's already on the map if no place phrase is found or it doesn't geocode, so normal questions are unaffected.
+4. **Real per-search recommendation marker:** after a successful search/navigation (via the search box, "go to", or the new in-question detection), fetch real `/indicators` + `/score` for that location's centroid and drop one marker there with a popup showing the real top-ranked rotation strategy, its real overall score, and a one-line real-data note (e.g. the dry-spell/rainfall anomaly driving it) - the same style as the existing Iowa "East Block" popup, but generated from real data for wherever was searched, not hand-written text. Replaces the previous search's marker on a new search; the 3 original Iowa field markers stay as-is for the default farm view only.
+5. Demo in Chrome: ask "go to Malaysia" in chat (confirm it now finds it and the marker/popup appears with real Malaysia data), then ask a follow-up question and confirm the answer cites Malaysia's real numbers, not Iowa's; separately ask "what's a good rotation for Kenya?" with no prior "go to" and confirm the map pans there and answers with Kenya's real data.
+6. Commit and push to `A.I-integration` (updates PR #1).
+
+---
+
 ## Make the AI smarter and the scoring more trustworthy (real data + transparency, not inflated numbers)
 
 **Status:** done — implemented, tested locally against live NASA POWER data, verified live in the website's chat UI (asked "make my score higher"; AI refused to inflate it and cited the real -26.1% rainfall anomaly, +1.78°C anomaly, 12-day dry spell instead), and confirmed live in production on Vercel (`/indicators`, `/score` both returning the new fields/tags at `https://agrointel-ai-api.vercel.app` as of commit `f97121d`). Pushed to `main` in `agrointel-ai` and `A.I-integration` in `agrointel-website` (commit `dc83485`).
