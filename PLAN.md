@@ -4,6 +4,23 @@ A running log of every plan proposed for this project, newest first. Each entry 
 
 ---
 
+## Build a public API so FieldCycle (Bubble) can call our AI
+
+**Status:** approved, in progress
+
+**Brief:** FieldCycle's Bubble app already has the API Connector plugin installed with 3 working integrations (NASA POWER, Photon OpenStreetMap geocoding, SRTM via OpenTopoData) - the exact same pattern we need, just no entry for our AI yet. This step builds what that entry would point to:
+
+1. A small FastAPI app (`api/main.py` or similar) wrapping existing logic, no duplicated code:
+   - `POST /indicators` - {lat, lon} -> real computed indicators (reuses `src/indicators/live.py`)
+   - `POST /score` - {indicators, weights?} -> ranked strategy comparisons (reuses `src/scoring`, `src/explanations`)
+   - `POST /chat` - {question, location_label, indicators, comparisons} -> grounded answer (reuses `src/chat/assistant.py`)
+2. Test it locally (not yet connected to Bubble) to confirm each endpoint works via real requests.
+3. Once locally verified, a separate follow-up step covers actually deploying it publicly and wiring up the Bubble API Connector entry - that needs a hosting decision from the user first.
+
+**Note on timing:** SMAP appears to be rate-limited for us right now (confirmed hang both in the app and standalone) - the `/indicators` endpoint will be built and tested with that in mind (POWER-driven indicators, which aren't rate-limited, verified first; SMAP re-verified once it's no longer throttled).
+
+---
+
 ## Make the main app location-agnostic (any latitude/longitude, not just Kern County)
 
 **Status:** approved, in progress
