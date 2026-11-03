@@ -28,7 +28,7 @@ A new, bigger feature: a world map where a farmer types a country and sees a liv
 
 - [x] **Set up Google Earth Engine access.** Free account/project registered, Earth Engine API enabled, verified with a minimal working script. *Done: project `nasa-space-apps-513601`, registered for non-commercial use, verified with `ee.Initialize()` + a real `USGS/SRTMGL1_003` elevation image query.*
 - [x] **Prove the suitability-layer concept for one country.** A GEE script/app that paints a real (not fake) crop-suitability layer onto the map for a single country, using real GEE-hosted datasets. *Done: `src/geo/suitability.py` + `pages/1_World_Map.py`, Malaysia (research plan Location 3), real interactive pan/zoom map verified in Chrome — suitability layer correctly boundaried to Malaysia's actual territory.*
-- [ ] **Build the world map interface.** Country search, GEE App (or embedded GEE layer) showing the suitability highlighting, matching the reference site's interaction pattern.
+- [x] **Build the world map interface.** Country search, GEE App (or embedded GEE layer) showing the suitability highlighting, matching the reference site's interaction pattern. *Done: real country picker (284 countries) in `pages/1_World_Map.py`, verified with Malaysia and the United States producing genuinely different, geographically sensible results.*
 - [ ] **Link the map to the detailed comparison view.** Clicking/selecting a spot on the map hands off to our existing Streamlit scoring+explanation app for that location — nothing already built gets thrown away.
 - [ ] **Expand beyond one country.** Once the pattern works for one country, confirm it holds for others before calling this "a world map."
 
