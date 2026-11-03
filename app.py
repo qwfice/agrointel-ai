@@ -1,12 +1,15 @@
-"""AGROINTEL AI — minimal Streamlit interface (goal 5).
+"""AGROINTEL AI — minimal Streamlit interface, with adjustable farmer
+priority weights (goals 5 and 6).
 
 Shows the real computed indicators, the weighted rotation scores, and the
 full evidence/benefits/gaps/risks comparison for Kern County, CA, reusing
 the exact same code as scripts/compute_indicators.py, run_scoring.py, and
-generate_comparison.py — no logic is duplicated here.
+generate_comparison.py — no logic is duplicated here. The sidebar sliders
+let a farmer re-weight the six criteria; the app re-runs the real scoring
+model (src/scoring/model.py) with those weights, it does not fake the
+update.
 
-Single location, fixed weights for now (location picker and adjustable
-weight sliders are goal 6).
+Single location for now (a location picker is a future step).
 
 Run with:
     streamlit run app.py
@@ -45,6 +48,34 @@ if not indicators_path.exists():
 indicators_df = pd.read_csv(indicators_path)
 indicators = dict(zip(indicators_df["indicator"], indicators_df["value"]))
 
+st.sidebar.header("Your priorities")
+st.sidebar.caption("Drag to say what matters more to you. Scores and rankings below update live.")
+CRITERION_LABELS = {
+    "soil_health_potential": "Soil health",
+    "water_use_suitability": "Water use",
+    "climate_resilience": "Climate resilience",
+    "pest_disease_interruption": "Pest/disease cycle break",
+    "erosion_reduction": "Erosion reduction",
+    "economic_suitability": "Economic return",
+}
+def _reset_weights() -> None:
+    for criterion in CRITERION_LABELS:
+        st.session_state.pop(f"weight_{criterion}", None)
+
+
+st.sidebar.button("Reset to research-plan defaults", on_click=_reset_weights)
+
+weights = {}
+for criterion, label in CRITERION_LABELS.items():
+    default_pct = round(DEFAULT_WEIGHTS[criterion] * 100)
+    weights[criterion] = (
+        st.sidebar.slider(label, min_value=0, max_value=100, value=default_pct, step=5, key=f"weight_{criterion}")
+        / 100
+    )
+if sum(weights.values()) == 0:
+    st.sidebar.warning("All priorities are at 0 — using equal weighting instead.")
+    weights = {c: 1.0 for c in CRITERION_LABELS}
+
 st.header("Kern County, CA — June 2023 conditions")
 cols = st.columns(5)
 cols[0].metric("Temp anomaly (mean)", f"{indicators['temp_anomaly_mean_c']:+.2f} C")
@@ -55,7 +86,7 @@ cols[4].metric("Soil moisture wetness", f"{indicators['soil_moisture_relative_we
 st.caption("Temp/rainfall anomalies vs. 5-year NASA POWER climatology. Soil moisture from real SMAP data (0=driest, 1=wettest SMAP can measure).")
 
 st.header("Rotation strategy comparison")
-ranked = rank_strategies(indicators)
+ranked = rank_strategies(indicators, weights)
 comparisons = [build_comparison(r["strategy"], r["criteria"], r["overall_score"], indicators) for r in ranked]
 
 chart_df = pd.DataFrame(
@@ -63,8 +94,9 @@ chart_df = pd.DataFrame(
 ).set_index("strategy")
 st.bar_chart(chart_df)
 
-with st.expander("Weights used"):
-    st.write({k: f"{v:.0%}" for k, v in DEFAULT_WEIGHTS.items()})
+total_weight = sum(weights.values())
+with st.expander("Weights currently used"):
+    st.write({CRITERION_LABELS[k]: f"{v / total_weight:.0%}" for k, v in weights.items()})
 
 for rank, comp in enumerate(comparisons, start=1):
     with st.expander(f"#{rank}  {comp['label']}  —  {comp['overall_score']:.1f}/100", expanded=(rank == 1)):
