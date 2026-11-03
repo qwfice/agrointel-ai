@@ -4,6 +4,20 @@ A running log of every plan proposed for this project, newest first. Each entry 
 
 ---
 
+## Wire real AGROINTEL AI into the updated agrointel-website chatbot (v2 site)
+
+**Status:** done — verified live in Chrome. Along the way: fixed the same `markers` TDZ bug as before, fixed the `.chat-panel { display: flex }` CSS rule that was silently defeating the native `[hidden]` attribute so the minimize/expand toggle did nothing, narrowed the keyword-command matching (only applies to short non-question phrases, ≤4 words and no "?") so real questions like "what's the best rotation strategy here?" fall through to the real AI instead of just scrolling the page, and switched the markdown formatter from paragraph-block-based to line-based so a bullet list right under a heading (no blank line between them) still renders as a real `<ul>` instead of literal `* ` text.
+
+**Context:** User supplied a newer version of the site (`~/Downloads/crop-rotation-tool 2`), building on the one already merged into `A.I-integration`. Diffed against the previous version: it adds a place-search box (Nominatim) and, notably, a full floating chatbot widget ("CropRot Assistant": `#chatbot` toggle button + `#chat-panel`) that's already built but is **rule-based, not AI** — `handleChatCommand()` pattern-matches keywords to control the map (go to a place, switch GIBS layers, toggle risk overlays, scroll to sections) and has 3 hardcoded canned answers (cover crops, SCN/pests, organic matter) plus a generic fallback for anything else. It does not call any real backend. Same pre-existing `markers`-before-declaration bug as before is present in this copy too.
+
+**Brief:**
+1. Keep every existing command behavior as-is (place search, layer switching, overlay toggles, section scrolling) — those are useful, deterministic, and don't need AI.
+2. Replace just the knowledge-answer path with the real AGROINTEL AI: the 3 hardcoded canned snippets (cover crop / SCN / organic matter) and the final generic fallback get replaced by a real call to `https://agrointel-ai-api.vercel.app` — `/indicators` (POWER-only, `include_soil_moisture: false`, same lesson learned from the first integration about SMAP timeouts) for the farm's `FARM_LAT`/`FARM_LON`, then `/chat` with the real indicators and the user's actual message, rendering the real Gemini-grounded answer as a bot message. Show "Thinking…" while waiting; on failure, show a plain error message instead of crashing.
+3. Fix the same `markers`-before-declaration TDZ bug as in the previous round (move the `const markers = []` earlier).
+4. Demo in the user's real Chrome: test both a command ("show NDVI") and a real question ("is a diversified rotation worth it here?") to confirm commands still work locally and open-ended questions now get real grounded AI answers.
+5. Commit and push to the same `A.I-integration` branch on `aizenthegoat123/agrointel-website` (adds to the already-open PR #1, doesn't need a new branch/PR).
+6. Update `GOALS.md` to reflect the upgraded integration.
+
 ## Wire the live AGROINTEL AI API into agrointel-website
 
 **Status:** done — chat section built, wired to the live API, tested live in Chrome with a real grounded answer for the Iowa farm location (fixed a pre-existing `markers`-before-declaration bug along the way that was breaking all page scripts). Committed and pushed to branch `A.I-integration` on https://github.com/aizenthegoat123/agrointel-website (branch named with a hyphen, not a space — git doesn't allow spaces in branch names). Push initially failed with a 403 (qwfice lacked write access); resolved once the teammate granted collaborator write access.
