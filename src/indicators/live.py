@@ -13,6 +13,7 @@ reported as unavailable rather than silently reused from elsewhere.
 
 from __future__ import annotations
 
+import os
 from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeoutError
 from datetime import date, timedelta
 
@@ -38,11 +39,20 @@ _earthaccess_logged_in = False
 
 
 def _ensure_earthaccess_login() -> None:
-    """Log in to Earthdata once per process (needed before any SMAP fetch)."""
+    """Log in to Earthdata once per process (needed before any SMAP fetch).
+
+    Prefers EARTHDATA_USERNAME/EARTHDATA_PASSWORD environment variables
+    (what a deployed server like Render would have set) and falls back to
+    ~/.netrc (local dev machines) when those aren't set.
+    """
     global _earthaccess_logged_in
-    if not _earthaccess_logged_in:
+    if _earthaccess_logged_in:
+        return
+    if os.environ.get("EARTHDATA_USERNAME") and os.environ.get("EARTHDATA_PASSWORD"):
+        earthaccess.login(strategy="environment")
+    else:
         earthaccess.login(strategy="netrc")
-        _earthaccess_logged_in = True
+    _earthaccess_logged_in = True
 
 
 def fetch_and_compute_indicators(lat: float, lon: float, include_soil_moisture: bool = True) -> dict:
