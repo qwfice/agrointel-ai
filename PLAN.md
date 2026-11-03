@@ -4,6 +4,14 @@ A running log of every plan proposed for this project, newest first. Each entry 
 
 ---
 
+## World map (GEE) — Build the world map interface (country search)
+
+**Status:** pending approval
+
+**Brief:** currently `pages/1_World_Map.py` is hardcoded to Malaysia only. This step adds a real country search/picker to that page — typing or selecting a country re-runs the same `src/geo/suitability.py` computation for that country's actual boundary and re-centers/re-renders the map, instead of needing a code change per country. To prove this isn't hardcoded under the hood, I'll verify it works for at least 2 different countries (Malaysia plus one more, e.g. the USA or India), not just swap the one hardcoded value. Does not yet include clicking a spot on the map to jump into the detailed Streamlit comparison (that's the next goal after this).
+
+---
+
 ## World map (GEE) — Prove the suitability-layer concept for one country (revised)
 
 **Status:** done
