@@ -4,6 +4,22 @@ A running log of every plan proposed for this project, newest first. Each entry 
 
 ---
 
+## Investigate date/opacity controls; remove Update button, auto-apply instead
+
+**Status:** done — small, low-risk change, verified live.
+
+**Findings (date & opacity accuracy check requested by user):**
+- Opacity slider was already live (applies instantly via an 'input' listener) — working correctly, no change needed.
+- Date and NASA Layer dropdown previously only took effect on clicking "Update". Verified the date itself IS accurate/functioning: GIBS's `best` WMTS endpoint returns real imagery (HTTP 200) for the requested date, auto-falling back to the nearest available day when the exact date isn't processed yet (confirmed with a date one day before "today"); for a date with no satellite data available yet (weeks out), it correctly returns 503 and the site gracefully falls back to the clean Esri basemap (no broken-image artifacts) via the existing `errorTileUrl`.
+
+**Brief:**
+1. Remove the "Update" button.
+2. Wire `change` listeners on the NASA Layer select and Date input straight to `updateGibsLayer()`, matching how opacity already behaved — every control now applies immediately.
+3. Demo in Chrome: confirm changing layer/date updates the map instantly with no button, verified via both visual change and real network requests.
+4. Commit and push to `A.I-integration` (updates PR #1).
+
+---
+
 ## Heatmap: accurate real-shape outlining (not just a rectangle)
 
 **Status:** done — verified live in Chrome with Malaysia (multi-part: Peninsular + Borneo, confirmed real colored coverage on both parts, zero color in Thailand/Indonesia/ocean) and Kenya (single polygon, no regression). Fixed a real gap found during testing: gridding one box over a multi-part country's whole combined bounding box left almost every sample point in open ocean between the parts (Malaysia initially came back with only 2 fetched points) — fixed by gridding each landmass part separately (`siBuildGridForGeometry`, capped to the 4 largest parts by area) instead of one grid over the full extent.
