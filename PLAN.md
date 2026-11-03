@@ -4,6 +4,24 @@ A running log of every plan proposed for this project, newest first. Each entry 
 
 ---
 
+## Make the AI smarter and the scoring more trustworthy (real data + transparency, not inflated numbers)
+
+**Status:** pending approval
+
+**Context:** User asked if we can make the AI "more intelligent" and make the score "higher" and "more trustable." Per this project's whole design principle so far (refusing fake heat-wave/GRACE data, refusing to mislabel assumption-based criteria as real, "decision support not guarantee" framing), this plan does NOT inflate numbers. Right now only 2 of 6 scoring criteria (`climate_resilience`, `erosion_reduction`) are driven by real NASA data — the other 4 (`soil_health_potential`, `water_use_suitability`, `pest_disease_interruption`, `economic_suitability`) are static expert-baseline guesses (`src/scoring/criteria.py`). I found one real computed indicator, `rainfall_anomaly_pct` (`src/indicators/environmental.py`), that's already implemented and imported in `src/indicators/live.py` but never actually used — it's dead weight. Wiring it in is a genuine, honest way to raise real-data coverage and make scores move for real reasons. Trustworthiness goes up through transparency (showing the user what's measured vs. assumed), not bigger numbers.
+
+**Brief:**
+1. **Backend — use the unused real indicator:** wire `rainfall_anomaly_pct` into `fetch_and_compute_indicators()` in `src/indicators/live.py` so it's actually returned by `/indicators`.
+2. **Backend — make `water_use_suitability` partially data-driven:** in `src/scoring/criteria.py`, adjust its static baseline up/down based on the real rainfall anomaly (same pattern already used for `climate_resilience`/`erosion_reduction`: a vulnerability-scaled penalty/bonus off a baseline) — e.g. a strategy with higher water demand gets penalized more when real rainfall is anomalously dry, and a small bonus when it's anomalously wet. This moves `water_use_suitability` from fully-assumed to 3rd real-data-driven criterion (2/6 → 3/6).
+3. **Backend — honest provenance tags:** have `score_all_criteria`/`/score` return a `confidence` tag per criterion (`"real_data"` vs `"expert_baseline"`) so nothing downstream can present a guess as a measurement.
+4. **Chat — richer, more honest grounding:** extend `build_context()` in `src/chat/assistant.py` to include the new rainfall indicator and each criterion's confidence tag, and tighten `SYSTEM_INSTRUCTION` so Gemini must say explicitly when a number it's citing is real-data-driven vs an expert starting-point assumption, and must cite the specific real indicator value behind any claim it makes. This is what "more intelligent" means here — better-grounded, more precise answers, not more creative freedom.
+5. **Website — show the provenance tags:** in the Suitability sidebar panel (and wherever criterion scores are shown), add a small "NASA data" vs "Expert baseline" badge per criterion so a farmer can see at a glance what's measured vs. a documented starting assumption.
+6. **Explicitly out of scope / left honest:** `soil_health_potential`, `pest_disease_interruption`, `economic_suitability` stay expert baselines — there's no real NASA-derived signal for soil organic matter, pest pressure, or market prices integrated yet (tracked as future goals in GOALS.md). No change here pretends otherwise.
+7. Demo in Chrome: pick a location, confirm `/indicators` now returns the rainfall anomaly, confirm `water_use_suitability` differs between a dry and a wet example location, confirm the badges render, and confirm asking the AI "how reliable is this score?" gets an honest, specific answer citing real numbers.
+8. Commit and push to `A.I-integration` (website) and the relevant branch in `agrointel-ai` (backend); update GOALS.md's real-data-coverage tracking afterward.
+
+---
+
 ## Investigate date/opacity controls; remove Update button, auto-apply instead
 
 **Status:** done — small, low-risk change, verified live.
