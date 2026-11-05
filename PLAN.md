@@ -4,6 +4,14 @@ A running log of every plan proposed for this project, newest first. Each entry 
 
 ---
 
+## Remove the pricing section from the landing page
+
+**Status:** done — small, direct removal per user instruction.
+
+Removed the whole Pricing section (Starter/Grower/Enterprise plan cards, the monthly/yearly billing toggle) from `index.html`, its two nav links and the footer link, the billing-toggle JS in `script.js` (would have thrown on load once the DOM elements were gone), and all related CSS (`.pricing-grid`, `.plan-card`, `.billing-toggle`, etc., including the responsive media-query rules). Verified live in Chrome: nav/footer no longer mention pricing, the page flows directly from Crops into FAQ with no gap, no console errors.
+
+---
+
 ## Fix: heatmap/block markers stuck on the home farm when searching another place
 
 **Status:** done — small, direct follow-up to the previous heatmap fix, implemented and verified live.
