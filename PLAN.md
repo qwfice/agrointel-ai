@@ -4,6 +4,22 @@ A running log of every plan proposed for this project, newest first. Each entry 
 
 ---
 
+## Fix: invisible/low-contrast text in dark mode
+
+**Status:** done, verified live.
+
+**Bug:** several small UI components (the hero's "FieldVision" pill, the "GreenHarvest North Farm" mockup card's crop-health rows and badge, the map's base-map/NASA-layer/date/search form fields, the chat's suggestion chips, the "01/02/03" step-example tags, feature icons) pair a *fixed, hardcoded light background* with *theme-sensitive text/icon color* (`--green-950/900/800`, `--ink`, `--muted`) — in dark mode those text tokens correctly flip light for contrast against the page's own dark surfaces, but these specific components' backgrounds never changed, so the text became light-on-light and nearly invisible. Exactly what the user's screenshots showed.
+
+**Fix:** audited every CSS rule pairing a theme-sensitive text color with a hardcoded hex background (programmatic check across the whole stylesheet, not just the reported spots) and handled each the right way for what it actually is:
+- Decorative badges/chips/icons meant to always look the same regardless of theme (`.pill`, `.chip`, `.step-chip`, `.dash-badge`, `.climate-icon`, `.crop-icon`) — pinned their text/icon color to new fixed `--fill-900`/`--fill-800` tokens instead, so they stay dark-on-light always.
+- Components that are actually part of an already-theme-aware mockup card (`.ch-row` crop-health rows, `.diag-rec`) — made their background theme-aware too (`var(--surface)`), consistent with their siblings, instead of pinning text.
+- Real form controls (map's base-map/layer/date selects, place search, suitability model select) — made their backgrounds theme-aware (`var(--surface-2)`/`var(--surface)`) so they're proper dark inputs in dark mode, which is the standard expectation, rather than staying permanently light.
+- Alert-state rows that intentionally keep a fixed light-red tint in both themes got their own text pinned dark (`--fill-ink-soft`) to match.
+
+Verified live in Chrome, toggling through light/dark and scrolling the full page: hero pill, mockup card (crop-health list, badge), map toolbar fields, chat suggestion chips, step-example tags, testimonials, and FAQ all read correctly in dark mode now. No console errors.
+
+---
+
 ## Remove auth buttons, replace fake CTA with a real data-sources list, add light/dark/system theme
 
 **Status:** done, verified live.
