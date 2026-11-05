@@ -4,6 +4,19 @@ A running log of every plan proposed for this project, newest first. Each entry 
 
 ---
 
+## Remove auth buttons, replace fake CTA with a real data-sources list, add light/dark/system theme
+
+**Status:** done, verified live.
+
+**Brief and what landed:**
+1. Removed "Sign in," "Get started" (nav) and "Start free trial" (hero) — no more user authentication per the user's plan change. `get-started.html`/`.js`/`.css` are left in place but now unlinked from the landing page (not deleted, in case they're wanted again). "Ask Agro — live AI" remains as the sole hero CTA (promoted to the primary button style).
+2. Replaced the bottom "Your next season starts smarter" lead-gen CTA (fake "12,000+ growers," email/farm-size form submitting nowhere real) with an honest "Real data, not guesses" section listing what's actually behind the page: NASA GIBS/MODIS, NASA POWER, NASA Worldview, Esri World Imagery, OpenStreetMap Nominatim, and Google Gemini via our AGROINTEL AI backend. Removed the now-dead `ctaForm` JS handler.
+3. Added a light/dark/system theme toggle (nav button, replacing the removed sign-in/get-started spot) backed by real CSS custom-property overrides, not just a UI that does nothing: redefined the surface/text/border tokens for dark mode (`@media (prefers-color-scheme: dark)` for "system" + `:root[data-theme="dark"]` for forced dark), and introduced separate `--fill-950/900/800` tokens so solid brand-green backgrounds (buttons, footer, badges, avatars - ~17 places) keep their fixed dark-green color while the same-named `--green-950/900/800` tokens (used ~54 times as heading/text color) correctly flip light for dark-mode contrast. Also found and fixed a real gap during testing: the nav bar's background was a hardcoded light rgba, invisible to the whole theme system - added `--nav-bg`/`--nav-bg-scrolled` tokens for it. An inline head script applies the saved choice before first paint (no flash); the preference persists in `localStorage` and defaults to "system" (no stored value at all).
+
+Verified live in Chrome: cycled all three modes (toast confirms each), checked feature cards/charts/the new data-sources section/footer for contrast in dark mode, and confirmed the choice survives a reload with no flash. No console errors.
+
+---
+
 ## Fix: Ask Agro chat panel grows forever instead of scrolling internally
 
 **Status:** done — small, direct bug fix, verified live.
