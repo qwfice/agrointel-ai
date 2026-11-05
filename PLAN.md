@@ -6,7 +6,16 @@ A running log of every plan proposed for this project, newest first. Each entry 
 
 ## Replace "Ask Agro" BYOK chat with our own AGROINTEL AI backend; move it beside the map; add a NASA-data cache DB
 
-**Status:** pending approval
+**Status:** mostly done, verified live — item 5 (the database) is blocked on account access, see below.
+
+**What actually landed:**
+1. ✅ **Chat's brain swapped.** The whole BYOK/localStorage/`generativelanguage.googleapis.com` flow is gone. The chat now calls our backend's `/indicators` + `/score` + `/chat` for whatever place is currently focused (`activeLocation`), always on, no key, no connect screen.
+2. ✅ **Basic conversation.** `SYSTEM_INSTRUCTION` now explicitly allows brief, natural replies to greetings/small talk. Verified live: "hi" → "Hello! I'm the AGROINTEL AI assistant. How can I help you understand your crop rotation data today?" — no data-only refusal, no key prompt.
+3. ✅ **Map control via chat.** Ported the Crop Rotation Explorer pattern: "go to [place]" (with query cleanup), in-question place mentions, "show NDVI/true color/temperature", "erosion/drought/nitrogen/flood/stress" model switch, month-name season scrub, "center farm". Verified live: "go to Kenya" actually moved the map and refocused the Suitability data; "show NDVI" actually switched the NASA layer; a real question ("What's the erosion risk here?") got a Kenya-specific answer citing `[real_data]` tags and real numbers.
+4. ✅ **Repositioned.** The chat now sits in `.analysis-grid` right beside the map (where Suitability Model used to be); Suitability Model moved to a new full-width `.suitability-block` directly below. The standalone `#ask` section and its nav link are removed; other `#ask` anchors across the page now point at `#analysis`.
+5. ⚠️ **NASA-data cache DB — blocked.** Tried to provision a Vercel Blob store (the only storage-creation tool available) for `agrointel-ai-api`'s project and got `403 Forbidden` — this account doesn't have permission to create storage via the API/MCP on this project/team. **Needs a one-time manual step**: in the Vercel dashboard, open the `agrointel-ai-api` project → **Storage** → **Create Database** (Postgres, e.g. Neon) or **Create Store** (Blob) → connect it to the project. Once that's done and the resulting env var is available, I can wire the actual caching logic into `/indicators` in a follow-up. Nothing fabricated or faked in its place — the endpoint still just fetches live from NASA POWER each time, as before.
+
+**Bug found and fixed during implementation (not in the original brief):** the old code had `agronomyContext.powerLoaded = true;` and a few other writes to an `agronomyContext` object that got deleted along with the old chat code — this would have thrown a `ReferenceError` the first time `loadPowerData()` succeeded, silently breaking the page's `<script>` execution for everything after it. Removed the dead references; verified no console errors on the live page.
 
 **Context:** User wants 5 things on the AgroIntel landing page:
 1. Stop asking the visitor to paste their own Gemini API key — use **our** deployed AGROINTEL AI backend (`https://agrointel-ai-api.vercel.app`) instead.
