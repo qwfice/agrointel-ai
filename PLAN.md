@@ -4,6 +4,35 @@ A running log of every plan proposed for this project, newest first. Each entry 
 
 ---
 
+## Replace "Ask Agro" BYOK chat with our own AGROINTEL AI backend; move it beside the map; add a NASA-data cache DB
+
+**Status:** pending approval
+
+**Context:** User wants 5 things on the AgroIntel landing page:
+1. Stop asking the visitor to paste their own Gemini API key — use **our** deployed AGROINTEL AI backend (`https://agrointel-ai-api.vercel.app`) instead.
+2. Add a real database so the AI/backend stores the NASA data it fetches, instead of re-fetching every time.
+3. Make sure the AI can handle basic conversation ("hi", etc.), not just data questions.
+4. Connect the AI to the map so it can control it (go to a place, switch layers/models, change date) — like the chat we built for the Crop Rotation Explorer site.
+5. Swap positions: put the AI chatbot where the "Suitability Model" panel currently sits (right beside the map), and move Suitability Model elsewhere.
+
+**What's there now, concretely:**
+- `#ask` (Ask Agro) is a **separate section**, far below the map, that calls Google's Gemini API **directly from the browser** with a **user-supplied API key** (`localStorage`). Its "grounding" is a hardcoded string (`agronomyContext.blockSummary`) and a `powerSummary` placeholder that's **never actually filled in** even after the real POWER data loads elsewhere on the page — so today's Ask Agro isn't really grounded in live data at all, despite the UI claiming it is.
+- The Suitability Model panel (`#analysis` → `.analysis-grid` → `.map-card` + `.suitability-panel`) sits directly beside the map and already computes everything from real NASA POWER data for whatever place is currently focused (the fix from a few turns ago).
+- Our real backend (`agrointel-ai` repo, deployed on Vercel) already has `/indicators`, `/score`, `/chat` — CORS-open (`allow_origins=["*"]`), so this site can call it directly, the same way the earlier Crop Rotation Explorer site did. Its Gemini system prompt currently says "answer ONLY using the real data provided," which is exactly why a plain "hi" would land awkwardly — it needs an explicit small-talk allowance.
+
+**Brief:**
+1. **Swap the chat's brain (website, `script.js`):** delete the whole "Connect Gemini"/API-key flow (`geminiKey`, `localStorage`, direct `generativelanguage.googleapis.com` calls). Replace with calls to our backend's `/indicators` + `/chat` for whatever place is currently focused on the map (reusing the same `powerSampleForDate`/real-data plumbing the Suitability Model already has) — the chat becomes always-on, no key, no paywall screen.
+2. **Basic conversation (backend, `agrointel-ai/src/chat/assistant.py`):** add an explicit line to `SYSTEM_INSTRUCTION` allowing brief, friendly replies to greetings/small talk ("hi", "thanks", "who are you") without declining or demanding a data question first — verified with a live "hi" test before calling this done.
+3. **Map control via chat (website, `script.js`):** port the pattern already proven on the Crop Rotation Explorer site — lightweight keyword/phrase parsing for "go to [place]" and in-question place mentions (pans the map + refocuses the Suitability data), plus "show NDVI / true color / erosion / drought / flood / stress", "scrub to [month]", "center farm" — before falling through to the real AI for substantive questions.
+4. **Move the chat next to the map (website, `index.html` + `styles.css`):** relocate the chat UI into the `.suitability-panel`'s position in `.analysis-grid` (beside the map), carrying over its nicer presentation (status dot, model info, suggestion chips, clear button) minus the now-unneeded key/connect UI. Move the Suitability Model panel (toggle, model dropdown, legend, per-block list) to directly below the map, full-width, so nothing is lost — just reordered. Remove the now-redundant standalone `#ask` section and its nav link, since the chat lives inline with the map now.
+5. **Real NASA-data cache (backend, `agrointel-ai`):** add a Postgres database (Vercel Postgres/Neon, free tier) with a `power_cache` table (`lat, lon, start_date, end_date, fetched_at, raw_json`). `/indicators` checks the cache first for that rounded lat/lon + date range; reuses it if fresh (e.g., fetched within the last 24h), otherwise fetches live from NASA POWER as today and **upserts** the real result. This is a cache of real fetched data, never fabricated, and also reduces repeated load on NASA's API as more places get searched. Needs a database to be provisioned on Vercel and a connection string added as an env var — I'll do this as part of implementation and confirm it's live before marking this done.
+6. Demo in Chrome: ask "hi" (friendly reply, no key prompt), ask a real question about the default farm (real data, no key needed), search a new place and ask about it (chat follows, like the map does), say "go to Kenya" in the new chat (map actually moves), confirm Suitability Model still fully works in its new position below the map, and confirm a second `/indicators` call for the same place/date hits the cache (visibly faster / confirmed via a backend log or a cache-hit flag in the response).
+7. Commit/push both repos (website → `agrointel-website` `main`; backend → `agrointel-ai` `main`), update GOALS.md.
+
+**Scope note:** this is the biggest change to this page so far — it touches both repos, adds real new infrastructure (a database), and removes a whole existing section (`#ask`). Flagging that explicitly before starting, per the user's own request for a plan first.
+
+---
+
 ## Get Started button: sign in, then redirect to the real map + AI page
 
 **Status:** done — implemented per the shared requirements doc ("Nasa Space Apps 2" Google Doc) and verified live.
