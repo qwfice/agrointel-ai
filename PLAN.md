@@ -4,6 +4,20 @@ A running log of every plan proposed for this project, newest first. Each entry 
 
 ---
 
+## Get Started button: sign in, then redirect to the real map + AI page
+
+**Status:** done — implemented per the shared requirements doc ("Nasa Space Apps 2" Google Doc) and verified live.
+
+**Context:** The doc's landing-page requirements include: it should be an introduction, not a page with every function on it; and "there should be a get started button that ask the user to sign-in and will redirect the user to our actual page where we did everything and the functions such as the map and A.I." The nav's existing "Get started" button went straight into the full 3-step onboarding wizard, and the separate sign-in flow (`get-started.html?mode=signin`) was a dead end — it showed a fake "Link sent" message and never redirected anywhere.
+
+**Change:** nav "Get started" now opens the sign-in panel directly (`get-started.html?mode=signin`) instead of the full wizard. Submitting an email shows "Signed in as [email]. Taking you to your farm view…" and auto-redirects (after a short pause) to `index.html#analysis` — this site's own NASA Live section, which has the real interactive map, the real Suitability heatmap, and the Ask Agro Gemini chat right nearby. Still clearly labeled as a demo (no real email/auth sent). Confirmed with the user this means "our own site" (not the separate, unrelated Crop Rotation Explorer tool on the `A.I-integration` branch), and that no public deployment is needed yet — this is a same-site redirect.
+
+The other items in that doc (soil-health crop explanations, satellite-vs-ground-based clarification, scientific-term explainers) were not actioned this round — user said they'll give further landing-page instructions separately.
+
+Verified live in Chrome: clicking "Get started" → sign-in panel → submitting an email → auto-redirects to `index.html#analysis` with the real map loaded. No console errors.
+
+---
+
 ## Remove the pricing section from the landing page
 
 **Status:** done — small, direct removal per user instruction.
