@@ -4,6 +4,18 @@ A running log of every plan proposed for this project, newest first. Each entry 
 
 ---
 
+## Fix: Ask Agro chat header stuck light in dark mode
+
+**Status:** done, verified live.
+
+**Bug:** user screenshot highlighted the "Ask Agro" chat panel's header row — `.ask-chat-header` had a hardcoded light gradient (`#f2f5ec` → `#eef1e6`) that never flipped with the theme, so in dark mode it rendered as a cream box sitting on top of the otherwise-dark chat card while the title/status text correctly turned light, making the whole header look broken/mismatched.
+
+**Fix:** replaced the hardcoded gradient with `linear-gradient(180deg, var(--surface-2), var(--surface))`, so the header keeps its subtle light-mode tint but now matches the dark-mode surface tokens like the rest of the card.
+
+**Verified:** served the folder over a local static server (Chrome extension can't screenshot `file://` pages) and loaded the NASA Live section with system dark mode active — header now blends with the card, no light box, no console errors.
+
+---
+
 ## Fix: invisible/low-contrast text in dark mode
 
 **Status:** done, verified live.
