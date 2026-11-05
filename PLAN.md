@@ -4,6 +4,16 @@ A running log of every plan proposed for this project, newest first. Each entry 
 
 ---
 
+## Fix: Ask Agro chat panel grows forever instead of scrolling internally
+
+**Status:** done — small, direct bug fix, verified live.
+
+**Bug:** `.ask-messages { max-height: none; }` in `styles.css` overrode the shared `.chat-messages` scroll cap, and `.ask-chat` had a `min-height` but no `max-height` — so every new message made the whole chat card (and the page below it) taller instead of scrolling inside a fixed box, exactly as the user's screenshots showed.
+
+**Fix:** gave `.ask-chat` a `max-height: 560px` (matching the map's height) and removed the `max-height: none` override on `.ask-messages` so it inherits the shared `.chat-messages` scroll behavior (`flex:1; overflow-y:auto`), plus `min-height: 0` so it can actually shrink to fit instead of forcing growth. Verified live in Chrome: sent several messages including a long reply, and the chat card stayed a fixed height aligned with the map, scrolling internally, with the input box always visible at the bottom. No console errors.
+
+---
+
 ## Replace "Ask Agro" BYOK chat with our own AGROINTEL AI backend; move it beside the map; add a NASA-data cache DB
 
 **Status:** mostly done, verified live — item 5 (the database) is blocked on account access, see below.
