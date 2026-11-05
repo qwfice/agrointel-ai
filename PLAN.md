@@ -4,6 +4,32 @@ A running log of every plan proposed for this project, newest first. Each entry 
 
 ---
 
+## Make the new landing-page's Suitability heatmap real (season/bare-field/crop-stress aware), fix the date timeline
+
+**Status:** pending approval
+
+**Context:** User shared a new, different site folder (`agrointel-website-main` from Downloads — a separate "AgroIntel AI Agronomy Landing Page" build, not the Crop Rotation Explorer site worked on earlier in this project; it isn't in a git repo). Its NASA Live section (`index.html` `#analysis`, logic in `script.js`) has a "Suitability Model" panel whose copy explicitly claims: *"Real, NASA-data-driven risk zones... interpolated from MODIS NDVI (250 m) and NASA POWER root-zone wetness."* That claim is currently false. User asked to fix the heatmap, explain what its color represents, make it reflect seasonal transitions / bare-field periods / crop stress, and fix the date timeline — plus optionally add a timeline, dataset-comparison overlays, or rainfall/temperature scenario sliders.
+
+**What's actually there right now (`script.js` lines ~625-696):**
+1. `MODELS` (erosion/drought/nitrogen/flood) has **hand-painted, fixed canvas gradient blobs** — same position, size, and color every time, for every date, regardless of anything. Nothing computed, nothing real.
+2. The gradient positions (`spots: [[0.28, 0.28, 0.34, ...]]`) are arbitrary canvas fractions with **no relationship to the 5 real block marker locations** (`BLOCK_MARKERS`) shown on the same map.
+3. Per-block risk labels (`risk: { A: "high", ... }`) are static text, same for every date.
+4. The page already fetches a **real** NASA POWER daily record (731 days, 2023-2024, temp + precip + GWETROOT) for the climate charts, but that data is discarded after the charts render — never reused for the heatmap.
+5. The `#nasaDate` input only drives the GIBS satellite-imagery layer. It has **zero effect on the suitability heatmap** — changing the date changes the picture underneath but the colored risk blobs never move. This is "the timeline doesn't work."
+
+**Brief (real-data approach, consistent with this project's standing honesty rule — no fabricated per-pixel data, every number traced to something real or clearly labeled as a documented assumption):**
+1. **Keep the real POWER record alive.** Store the already-fetched daily series (not just the chart aggregates) in a shared variable so the heatmap code can look up real temperature and GWETROOT values for any date.
+2. **Add a documented crop-calendar table** (bare / establishing / growing / peak / senescence month ranges, and heat/drought sensitivity factors) for the 5 block crops (Tomato, Wheat, Cotton, Grapes, Paddy) — clearly labeled as a typical-calendar assumption, the same honest pattern used for the vulnerability factors in the main AGROINTEL AI scoring model, not presented as measured.
+3. **Make the date input actually drive the heatmap.** For whichever date is selected, map it onto the real 2023-2024 POWER record by calendar day (honestly labeled "based on real NASA POWER conditions typical for this time of year," since POWER has no live data for future dates) to get a real temperature-anomaly and real root-zone-dryness reading, and combine that with the crop-calendar phase for each block.
+4. **Compute real per-block scores instead of static labels:** erosion risk rises when a block is in a bare-field phase and real recent rainfall was heavy; drought/stress risk rises with real root-zone dryness scaled by each crop's documented drought sensitivity, and matters most during growing/peak phases, little while bare or dormant; nitrogen-loss risk rises with real heavy-rain events during establishing/growing phases. A new **"Crop Stress & Season"** model is added, combining real heat + moisture stress with the bare-field/season-phase signal directly, since that's what was asked for and doesn't cleanly fit the 4 existing categories.
+5. **Fix the heatmap's geography:** position each gradient blob at its block's real lat/lon (converted into the image overlay's canvas fraction) instead of arbitrary fixed spots, so the colored zones actually sit over the real block markers.
+6. **Explain the color honestly, in the UI:** rewrite the Suitability panel's copy and add a short legend so it accurately says what's real (POWER heat/moisture + real block locations) vs. documented assumption (crop calendar, sensitivity factors) — fixing the current false "MODIS NDVI 250m" claim rather than just leaving it.
+7. **Optional add-ons:** (a) a simple month/season scrub control so the user can slide through a full year and watch bare-field/stress conditions evolve, without retyping dates — the most direct way to prove "the timeline works"; (b) rainfall/temperature scenario sliders (± over the real baseline) that recompute the heatmap live, clearly labeled "what-if," not a forecast. Skipping a full "dataset comparison overlay" (e.g., two heatmaps side by side) this round as a bigger, separate feature — can propose it afterward if wanted.
+8. Demo in Chrome: change the date across seasons and confirm the heatmap visibly changes (not static); switch models and confirm the legend/notes explain the color; use the scrub control and scenario sliders and confirm both actually move the heatmap.
+9. No git repo here to push to — ask the user where this should land (new repo, or copied back into the existing `agrointel-website` project) once implemented and verified.
+
+---
+
 ## Sync the chatbot to the map, and add real per-search crop-suitability markers
 
 **Status:** done — implemented and verified live in Chrome. "go to malaysia on the map" now geocodes correctly (previously failed). Asked "what's a good rotation strategy for Kenya?" with no prior "go to": map auto-panned to Kenya's real boundary first, then answered citing Kenya's real numbers (0 extreme-rainfall days, 6.88mm/day threshold, water-use 58.2/100) instead of Iowa's - confirming the chat is now genuinely synced to the map. The new per-search recommendation marker (a real `/indicators`+`/score` fetch for the searched point) opened on click showing Kenya's actual top-ranked strategy (Soil-Conservation, 71.5/100) and real conditions. Fixed one bug found during testing: the recommendation marker used `L.circleMarker` which sat behind the heatmap's invisible per-cell inspection markers and had its clicks swallowed - switched to a real `L.marker` (separate Leaflet pane) so it's reliably clickable. Pushed to `A.I-integration` (commit `a5236ee`, updates PR #1).
