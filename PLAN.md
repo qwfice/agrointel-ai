@@ -4,6 +4,18 @@ A running log of every plan proposed for this project, newest first. Each entry 
 
 ---
 
+## Fix: heatmap/block markers stuck on the home farm when searching another place
+
+**Status:** done — small, direct follow-up to the previous heatmap fix, implemented and verified live.
+
+**Bug (reported with a screenshot):** on the new AgroIntel landing page, searching for another place on the NASA Live map moved the base map but the suitability heatmap and the square block markers stayed fixed over the home Iowa farm — the just-fixed real heatmap was still only ever computed for `BLOCK_MARKERS`/`SUIT_BOUNDS`, both hardcoded to the home farm; `searchForm`'s submit handler only did `map.flyTo` + a plain popup, never touching either.
+
+**Fix:** introduced `activeLocation`/`activeBlocks`/`activeSuitBounds` state. A search now calls `focusSuitabilityOn(lat, lon, label, bbox)`, which: generates 5 generic "sample point" markers (explicitly labeled generic cropland, not a specific crop claim, since we don't have real per-field crop identity for an arbitrary place) spread across a farm-scale box around the searched point (clamped to ~0.15°, ignoring an oversized Nominatim bbox like a whole country's, so a country search still shows a sensible local sample area); fetches a real NASA POWER record for that exact point (cached per location); and recomputes the heatmap/per-point list from it, with an honest "generic cropland + Northern-Hemisphere calendar" caveat in the panel note. "Center farm" restores the original named Tomato/Wheat/Cotton/Grapes/Paddy blocks. Verified live in Chrome: searched Punjab, India (heatmap + markers relocated, real data, correct caveat shown), "Center farm" correctly restored the named home-farm blocks, and searched Kenya (bbox-too-large case) to confirm the box clamps to a sensible farm-scale area instead of spreading across the whole country. No console errors.
+
+Pushed to `aizenthegoat123/agrointel-website`'s `main` branch per the user's earlier instruction (same destination as the prior push).
+
+---
+
 ## Make the new landing-page's Suitability heatmap real (season/bare-field/crop-stress aware), fix the date timeline
 
 **Status:** done — implemented and verified live in Chrome. The real NASA POWER daily record (already fetched for the climate charts) is now kept and reused to compute every block's score live; gradient blobs sit at each block's real lat/lon; a documented crop-growth calendar drives bare-field detection. Verified: switching the date to January correctly flagged Wheat as "bare" with a near-empty heatmap (dormant fields = low live-crop stress, as designed); the new season-scrub slider moved the date and visibly changed the heatmap/notes/per-block list in real time; switching to "Crop Stress & Season" showed real heat/moisture-driven scores; the rainfall what-if slider at -50% correctly pushed the two most drought-sensitive crops (Tomato, Paddy) from LOW to MODERATE and the model note showed "What-if applied: -50% rainfall... over the real baseline." No console errors. Rewrote the panel's copy, which previously made a false "MODIS NDVI" claim. This folder (`agrointel-website-main`, from Downloads) isn't a git repo. User asked to push it to `aizenthegoat123/agrointel-website`'s `main` branch — pushed as commit `23bcdd8`, replacing that branch's previous content (the Crop Rotation Explorer prototype) with this new AgroIntel landing page. Note: the `A.I-integration` branch was left untouched and still holds the old Crop Rotation Explorer site, so the two branches now diverge.
